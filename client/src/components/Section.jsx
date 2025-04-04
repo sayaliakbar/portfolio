@@ -27,7 +27,9 @@ const Section = ({
   return (
     <section
       id={id}
-      className={`py-20 ${light ? "bg-white" : "bg-gray-50"} ${className}`}
+      className={`py-12 md:py-20 ${
+        light ? "bg-white" : "bg-gray-50"
+      } ${className}`}
     >
       <div className={`container ${containerClassName}`}>
         <Motion.div
