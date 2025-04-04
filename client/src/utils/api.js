@@ -1,4 +1,5 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -7,6 +8,71 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// Helper function to check if token is expired
+const isTokenExpired = (token) => {
+  if (!token) return true;
+
+  try {
+    const decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    return decoded.exp < currentTime;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return true;
+  }
+};
+
+// Request interceptor - Add auth token and check expiration
+api.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem("auth_token");
+
+    // If token exists, check if it's expired
+    if (token) {
+      if (isTokenExpired(token)) {
+        // Token is expired - clear localStorage and redirect to login
+        console.log("Token expired, redirecting to login");
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
+
+        // If not on login page already, redirect
+        if (!window.location.pathname.includes("/admin/login")) {
+          window.location.href = "/admin/login";
+        }
+        return Promise.reject("Token expired");
+      }
+
+      // Token is valid, add to headers
+      config.headers["x-auth-token"] = token;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - Handle 401 Unauthorized errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      // Clear tokens on authentication error
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("refresh_token");
+
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes("/admin/login")) {
+        console.log("Unauthorized, redirecting to login");
+        window.location.href = "/admin/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // API endpoints
 export const fetchProjects = async () => {
