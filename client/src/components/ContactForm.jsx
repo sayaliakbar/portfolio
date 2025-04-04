@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion as Motion } from "framer-motion";
 import Button from "./Button";
 import axios from "axios";
@@ -17,6 +17,21 @@ const ContactForm = () => {
     success: null,
     error: null,
   });
+
+  // Add useEffect to hide success message after timeout
+  useEffect(() => {
+    let timeoutId;
+    if (submitStatus.success) {
+      timeoutId = setTimeout(() => {
+        setSubmitStatus((prev) => ({ ...prev, success: null }));
+      }, 3000); // Hide after 3 seconds
+    }
+
+    // Cleanup function to clear timeout if component unmounts or success changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [submitStatus.success]);
 
   const validate = () => {
     const newErrors = {};
