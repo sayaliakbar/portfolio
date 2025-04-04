@@ -124,6 +124,14 @@ const Footer = () => {
                   Contact
                 </a>
               </li>
+              <li>
+                <Link
+                  to="/admin"
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
+                  Admin
+                </Link>
+              </li>
             </ul>
           </div>
 
