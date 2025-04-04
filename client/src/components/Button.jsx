@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 const Button = ({
@@ -42,7 +42,7 @@ const Button = ({
   if (to) {
     if (to.startsWith("#")) {
       return (
-        <motion.div
+        <Motion.div
           variants={buttonVariants}
           initial="initial"
           whileHover="hover"
@@ -56,12 +56,12 @@ const Button = ({
           >
             {children}
           </a>
-        </motion.div>
+        </Motion.div>
       );
     }
 
     return (
-      <motion.div
+      <Motion.div
         variants={buttonVariants}
         initial="initial"
         whileHover="hover"
@@ -70,14 +70,14 @@ const Button = ({
         <Link to={to} className={baseClasses} {...props}>
           {children}
         </Link>
-      </motion.div>
+      </Motion.div>
     );
   }
 
   // If "href" prop is provided, render anchor tag
   if (href) {
     return (
-      <motion.div
+      <Motion.div
         variants={buttonVariants}
         initial="initial"
         whileHover="hover"
@@ -92,13 +92,13 @@ const Button = ({
         >
           {children}
         </a>
-      </motion.div>
+      </Motion.div>
     );
   }
 
   // Otherwise, render button element
   return (
-    <motion.button
+    <Motion.button
       className={baseClasses}
       onClick={onClick}
       variants={buttonVariants}
@@ -108,7 +108,7 @@ const Button = ({
       {...props}
     >
       {children}
-    </motion.button>
+    </Motion.button>
   );
 };
 
