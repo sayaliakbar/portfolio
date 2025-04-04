@@ -69,7 +69,7 @@ const ContactForm = () => {
     setSubmitStatus({ submitting: true, success: null, error: null });
 
     try {
-      const response = await axios.post("/api/messages", formData);
+      const response = await axios.post("/messages", formData);
 
       if (response.data.success) {
         setSubmitStatus({
