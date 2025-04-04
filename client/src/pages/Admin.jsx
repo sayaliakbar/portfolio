@@ -51,7 +51,6 @@ const Admin = () => {
     try {
       const response = await api.get("/auth");
       setUserData(response.data);
-      console.log("User data loaded:", response.data);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
