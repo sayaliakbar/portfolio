@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion as Motion } from "framer-motion";
 import Button from "./Button";
-import axios from "axios";
+import { sendMessage } from "../utils/api";
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -32,6 +32,21 @@ const ContactForm = () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [submitStatus.success]);
+
+  // Add useEffect to hide error message after timeout
+  useEffect(() => {
+    let timeoutId;
+    if (submitStatus.error) {
+      timeoutId = setTimeout(() => {
+        setSubmitStatus((prev) => ({ ...prev, error: null }));
+      }, 5000); // Hide after 5 seconds
+    }
+
+    // Cleanup function to clear timeout
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [submitStatus.error]);
 
   const validate = () => {
     const newErrors = {};
@@ -84,36 +99,52 @@ const ContactForm = () => {
     setSubmitStatus({ submitting: true, success: null, error: null });
 
     try {
-      // Use a local variable to avoid unnecessary re-renders
-      const submittedData = { ...formData };
+      // Use the sendMessage utility from api.js
+      const response = await sendMessage(formData);
 
-      const response = await axios.post("/messages", submittedData);
+      // Clear form first to improve perceived performance
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
 
-      if (response.data.success) {
-        // Clear form first to improve perceived performance
-        setFormData({
-          name: "",
-          email: "",
-          subject: "",
-          message: "",
+      // Check if email notification failed but message was saved
+      if (response.emailError) {
+        setSubmitStatus({
+          submitting: false,
+          success:
+            "Your message was saved, but we couldn't send an email notification. We'll still receive your message.",
+          error: null,
         });
-
+      } else {
         setSubmitStatus({
           submitting: false,
           success: "Your message has been sent successfully!",
           error: null,
         });
-      } else {
-        throw new Error(response.data.message || "Something went wrong");
       }
     } catch (error) {
+      // Handle specific network errors for better user feedback
+      let errorMessage;
+
+      if (!navigator.onLine) {
+        errorMessage =
+          "You appear to be offline. Please check your internet connection and try again.";
+      } else if (error.code === "ECONNABORTED" || !error.response) {
+        errorMessage =
+          "Could not connect to the server. Please try again later.";
+      } else {
+        errorMessage =
+          error.response?.data?.message ||
+          "Failed to send your message. Please try again later.";
+      }
+
       setSubmitStatus({
         submitting: false,
         success: null,
-        error:
-          error.response?.data?.message ||
-          error.message ||
-          "Something went wrong",
+        error: errorMessage,
       });
     }
   };
