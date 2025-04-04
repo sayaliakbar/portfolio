@@ -157,7 +157,7 @@ const Admin = () => {
     const featuredCount = projects.filter((p) => p.featured).length;
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-4">
         <Motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -169,13 +169,14 @@ const Admin = () => {
               <p className="text-lg font-medium opacity-90">Total Projects</p>
               <h3 className="text-3xl font-bold mt-2">{projects.length}</h3>
             </div>
-            <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+            <div className="p-3 bg-white bg-opacity-70 rounded-lg shadow-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                stroke="black"
+                strokeWidth={3}
               >
                 <path
                   strokeLinecap="round"
@@ -189,7 +190,7 @@ const Admin = () => {
           <div className="mt-4">
             <button
               onClick={handleAddProject}
-              className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
+              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-blue-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
             >
               Add New
             </button>
@@ -207,13 +208,14 @@ const Admin = () => {
               <p className="text-lg font-medium opacity-90">Featured</p>
               <h3 className="text-3xl font-bold mt-2">{featuredCount}</h3>
             </div>
-            <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+            <div className="p-3 bg-white bg-opacity-70 rounded-lg shadow-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                stroke="black"
+                strokeWidth={3}
               >
                 <path
                   strokeLinecap="round"
@@ -227,9 +229,9 @@ const Admin = () => {
           <div className="mt-4">
             <button
               onClick={() => handleTabSwitch("projects")}
-              className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
+              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-purple-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
             >
-              View All
+              Manage
             </button>
           </div>
         </Motion.div>
@@ -247,13 +249,14 @@ const Admin = () => {
                 {unreadMessageCount > 0 ? `${unreadMessageCount} new` : "0 new"}
               </h3>
             </div>
-            <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+            <div className="p-3 bg-white bg-opacity-70 rounded-lg shadow-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                stroke="black"
+                strokeWidth={3}
               >
                 <path
                   strokeLinecap="round"
@@ -267,7 +270,7 @@ const Admin = () => {
           <div className="mt-4">
             <button
               onClick={() => handleTabSwitch("messages")}
-              className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
+              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-amber-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
             >
               View All
             </button>
@@ -287,13 +290,14 @@ const Admin = () => {
                 {userData?.twoFactorEnabled ? "Active" : "Basic"}
               </h3>
             </div>
-            <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+            <div className="p-3 bg-white bg-opacity-70 rounded-lg shadow-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                stroke="black"
+                strokeWidth={3}
               >
                 <path
                   strokeLinecap="round"
@@ -307,7 +311,7 @@ const Admin = () => {
           <div className="mt-4">
             <button
               onClick={() => handleTabSwitch("security")}
-              className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
+              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-green-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
             >
               Manage
             </button>
@@ -607,7 +611,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navigation Bar */}
-      <header className="bg-white shadow-sm z-10 pt-11">
+      <header className="bg-white shadow-sm z-10">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
@@ -677,7 +681,7 @@ const Admin = () => {
       </nav>
 
       {/* Main Content with spacing from navigation */}
-      <main className="flex-grow container mx-auto px-4 py-6">
+      <main className="flex-grow container mx-auto px-4 py-6 mt-2">
         {renderTabContent()}
       </main>
     </div>
