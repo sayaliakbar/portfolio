@@ -6,7 +6,7 @@ import { isAuthenticated as checkAuthStatus, logoutUser } from "../utils/auth";
 import AdminLogin from "../components/AdminLogin";
 import ProjectForm from "../components/ProjectForm";
 import TwoFactorSetup from "../components/TwoFactorSetup";
-import axios from "axios";
+import api from "../utils/api";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -49,8 +49,9 @@ const Admin = () => {
 
   const loadUserData = async () => {
     try {
-      const response = await axios.get("/auth");
+      const response = await api.get("/auth");
       setUserData(response.data);
+      console.log("User data loaded:", response.data);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
@@ -107,6 +108,15 @@ const Admin = () => {
   const handleTwoFactorSetupComplete = () => {
     // Reload user data to get updated 2FA status
     loadUserData();
+  };
+
+  const handleTabSwitch = (tab) => {
+    setActiveTab(tab);
+
+    // Reload user data when switching to security tab
+    if (tab === "security") {
+      loadUserData();
+    }
   };
 
   if (!isAuthenticated) {
@@ -243,7 +253,7 @@ const Admin = () => {
           <div className="border-b border-gray-200 mb-6">
             <nav className="flex -mb-px">
               <button
-                onClick={() => setActiveTab("projects")}
+                onClick={() => handleTabSwitch("projects")}
                 className={`py-3 px-6 border-b-2 font-medium text-sm ${
                   activeTab === "projects"
                     ? "border-indigo-500 text-indigo-600"
@@ -253,7 +263,7 @@ const Admin = () => {
                 Projects
               </button>
               <button
-                onClick={() => setActiveTab("security")}
+                onClick={() => handleTabSwitch("security")}
                 className={`py-3 px-6 border-b-2 font-medium text-sm ${
                   activeTab === "security"
                     ? "border-indigo-500 text-indigo-600"
