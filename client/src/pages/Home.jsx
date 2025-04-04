@@ -387,17 +387,17 @@ const HomePage = () => {
             </p>
             <div className="space-y-4">
               <div className="flex items-start">
-                <span className="text-indigo-600 mr-3">📍</span>
+                <span className="text-indigo-600 ml-1.75 mr-3.5">📍</span>
                 <div>
                   <h4 className="font-medium">Location</h4>
-                  <p className="text-gray-600">City, Country</p>
+                  <p className="text-gray-600">Quetta, Pakistan</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <span className="text-indigo-600 mr-3">📧</span>
                 <div>
                   <h4 className="font-medium">Email</h4>
-                  <p className="text-gray-600">email@example.com</p>
+                  <p className="text-gray-600">sayaliakbar@gmail.com</p>
                 </div>
               </div>
             </div>
