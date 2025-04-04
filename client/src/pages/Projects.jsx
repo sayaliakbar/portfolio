@@ -165,7 +165,7 @@ const ProjectsPage = () => {
             <Motion.button
               key={index}
               onClick={() => handleFilter(tech)}
-              className={`px-4 py-2 rounded-full transition-all ${
+              className={`px-4 py-2 rounded-full cursor-pointer transition-all ${
                 activeFilter === tech
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-100 text-gray-800 hover:bg-gray-200"
