@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 import { FaServer, FaDatabase, FaReact } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
@@ -111,7 +111,7 @@ const HomePage = () => {
           id="home"
           className="container grid md:grid-cols-2 gap-8 items-center py-20"
         >
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -136,7 +136,7 @@ const HomePage = () => {
               </Button>
             </div>
             <div className="flex space-x-4 mt-8">
-              <motion.a
+              <Motion.a
                 href="https://github.com/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -146,8 +146,8 @@ const HomePage = () => {
                 aria-label="GitHub Profile"
               >
                 <FaGithub size={24} />
-              </motion.a>
-              <motion.a
+              </Motion.a>
+              <Motion.a
                 href="https://linkedin.com/in/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -157,8 +157,8 @@ const HomePage = () => {
                 aria-label="LinkedIn Profile"
               >
                 <FaLinkedin size={24} />
-              </motion.a>
-              <motion.a
+              </Motion.a>
+              <Motion.a
                 href="https://x.com/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -168,11 +168,11 @@ const HomePage = () => {
                 aria-label="Twitter Profile"
               >
                 <FaTwitter size={24} />
-              </motion.a>
+              </Motion.a>
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -183,11 +183,11 @@ const HomePage = () => {
               alt="Developer"
               className="rounded-lg shadow-lg w-full h-auto object-cover"
             />
-          </motion.div>
+          </Motion.div>
         </div>
 
         {/* Decorative elements */}
-        <motion.div
+        <Motion.div
           className="absolute -bottom-16 -right-16 w-64 h-64 bg-indigo-200 rounded-full opacity-20"
           animate={{
             scale: [1, 1.1, 1],
@@ -198,7 +198,7 @@ const HomePage = () => {
             ease: "easeInOut",
           }}
         />
-        <motion.div
+        <Motion.div
           className="absolute top-20 -left-16 w-32 h-32 bg-sky-200 rounded-full opacity-20"
           animate={{
             scale: [1, 1.2, 1],
@@ -220,7 +220,7 @@ const HomePage = () => {
         light={true}
       >
         <div className="grid md:grid-cols-2 gap-8 items-center">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -249,9 +249,9 @@ const HomePage = () => {
                 Download Resume
               </Button>
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -298,7 +298,7 @@ const HomePage = () => {
                 </li>
               </ul>
             </div>
-          </motion.div>
+          </Motion.div>
         </div>
       </Section>
 
@@ -325,7 +325,7 @@ const HomePage = () => {
             "Redux",
             "Git",
           ].map((tech, index) => (
-            <motion.div
+            <Motion.div
               key={index}
               className="bg-white py-3 px-4 rounded-lg shadow-sm text-center"
               whileHover={{ y: -5 }}
@@ -335,7 +335,7 @@ const HomePage = () => {
               viewport={{ once: true }}
             >
               <span className="font-medium">{tech}</span>
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
       </Section>
@@ -373,7 +373,7 @@ const HomePage = () => {
         subtitle="Have a question or want to work together? Reach out to me!"
       >
         <div className="grid md:grid-cols-2 gap-12">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
@@ -401,16 +401,16 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
             <ContactForm />
-          </motion.div>
+          </Motion.div>
         </div>
       </Section>
     </div>
