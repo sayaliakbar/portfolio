@@ -1,39 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// List of allowed IP addresses for admin access
-// This should be loaded from environment variables in production
-const ALLOWED_IPS = process.env.ALLOWED_ADMIN_IPS
-  ? process.env.ALLOWED_ADMIN_IPS.split(",")
-  : [];
-
-// IP whitelist middleware for admin routes
-const ipWhitelist = (req, res, next) => {
-  // Get client IP
-  const clientIp =
-    req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-
-  console.log(`Admin access attempt from IP: ${clientIp}`);
-
-  // If no IPs are configured, skip the check (development mode)
-  if (ALLOWED_IPS.length === 0) {
-    console.log("No IP whitelist configured, allowing access");
-    return next();
-  }
-
-  // Check if the client IP is in the allowed list
-  if (!ALLOWED_IPS.includes(clientIp)) {
-    console.log(`IP ${clientIp} not in whitelist, access denied`);
-    return res.status(403).json({
-      message:
-        "Access denied from your location. This admin area is restricted.",
-    });
-  }
-
-  console.log(`IP ${clientIp} in whitelist, allowing access`);
-  next();
-};
-
 // Standard auth middleware for protected routes
 module.exports = async function (req, res, next) {
   // Get token from header
@@ -141,6 +108,3 @@ exports.refreshToken = async function (req, res) {
     res.status(500).send("Server error");
   }
 };
-
-// Export the whitelist middleware
-module.exports.ipWhitelist = ipWhitelist;
