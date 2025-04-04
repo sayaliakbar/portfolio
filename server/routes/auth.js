@@ -21,92 +21,135 @@ const {
 router.post("/login", authLimiter, async (req, res) => {
   const { username, password } = req.body;
 
+  console.log(`Login attempt for username: ${username}`);
+
   try {
     // See if user exists
     let user = await User.findOne({ username });
     if (!user) {
+      console.log(`Login failed: User ${username} not found`);
       return res.status(400).json({ message: "Invalid Credentials" });
     }
 
     // Check if account is locked
     if (user.isLocked()) {
       const lockTime = Math.ceil((user.lockUntil - new Date()) / 60000);
+      console.log(
+        `Login blocked: Account ${username} is locked until ${user.lockUntil}`
+      );
       return res.status(403).json({
         message: `Account is locked. Try again in ${lockTime} minutes.`,
       });
     }
 
+    // Log current login attempts
+    console.log(
+      `Current login attempts for ${username}: ${
+        user.loginAttempts
+      }, lockUntil: ${user.lockUntil || "not set"}`
+    );
+
     // Check password
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
+    if (isMatch) {
+      // Password matched - reset login attempts and set last login
+      const updateResult = await User.findByIdAndUpdate(
+        user._id,
+        {
+          $set: {
+            loginAttempts: 0,
+            lockUntil: null,
+            lastLogin: new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      console.log(
+        `Successful login for ${username}, updated lastLogin: ${updateResult.lastLogin}`
+      );
+
+      // Check if 2FA is enabled
+      if (user.twoFactorEnabled) {
+        // Return a temporary token to identify the user for 2FA verification
+        const tempPayload = {
+          temp: true,
+          userId: user.id,
+        };
+
+        const tempToken = jwt.sign(
+          tempPayload,
+          process.env.JWT_SECRET,
+          { expiresIn: "5m" } // Short expiry for 2FA step
+        );
+
+        return res.json({
+          requiresTwoFactor: true,
+          tempToken,
+        });
+      }
+
+      // Generate access token and refresh token
+      const payload = {
+        user: {
+          id: user.id,
+          role: user.role,
+        },
+      };
+
+      // Generate refresh token
+      const refreshToken = generateSecureToken();
+
+      // Save refresh token to database with expiry
+      await user.updateRefreshToken(refreshToken);
+
+      // Generate access token with shorter expiry
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
+        (err, token) => {
+          if (err) throw err;
+          res.json({
+            token,
+            refreshToken,
+          });
+        }
+      );
+    } else {
       // Increment login attempts
       await user.incrementLoginAttempts();
 
+      // Refetch the user to get the updated login attempts and lockUntil values
+      const updatedUser = await User.findById(user._id);
+      console.log(
+        `Failed login: Attempts increased to ${
+          updatedUser.loginAttempts
+        }, lockUntil: ${updatedUser.lockUntil || "not set"}`
+      );
+
       // If account is now locked, inform the user
-      if (user.loginAttempts + 1 >= 5) {
+      if (updatedUser.isLocked()) {
+        const lockTime = Math.ceil(
+          (updatedUser.lockUntil - new Date()) / 60000
+        );
+        console.log(
+          `Account ${username} is now locked for ${lockTime} minutes`
+        );
         return res.status(403).json({
-          message:
-            "Too many failed login attempts. Account is locked for 1 hour.",
+          message: `Account is locked due to too many failed attempts. Try again in ${lockTime} minutes.`,
+        });
+      } else if (updatedUser.loginAttempts >= 3) {
+        // Warn user they're getting close to being locked
+        return res.status(400).json({
+          message: `Invalid credentials. ${
+            5 - updatedUser.loginAttempts
+          } attempts remaining before account is locked.`,
         });
       }
 
       return res.status(400).json({ message: "Invalid Credentials" });
     }
-
-    // Password matched - reset login attempts and set last login
-    await User.findByIdAndUpdate(user._id, {
-      loginAttempts: 0,
-      lockUntil: null,
-      lastLogin: new Date(),
-    });
-
-    // Check if 2FA is enabled
-    if (user.twoFactorEnabled) {
-      // Return a temporary token to identify the user for 2FA verification
-      const tempPayload = {
-        temp: true,
-        userId: user.id,
-      };
-
-      const tempToken = jwt.sign(
-        tempPayload,
-        process.env.JWT_SECRET,
-        { expiresIn: "5m" } // Short expiry for 2FA step
-      );
-
-      return res.json({
-        requiresTwoFactor: true,
-        tempToken,
-      });
-    }
-
-    // Generate access token and refresh token
-    const payload = {
-      user: {
-        id: user.id,
-        role: user.role,
-      },
-    };
-
-    // Generate refresh token
-    const refreshToken = generateSecureToken();
-
-    // Save refresh token to database with expiry
-    await user.updateRefreshToken(refreshToken);
-
-    // Generate access token with shorter expiry
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
-      (err, token) => {
-        if (err) throw err;
-        res.json({
-          token,
-          refreshToken,
-        });
-      }
-    );
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
@@ -264,7 +307,7 @@ router.get("/", auth, async (req, res) => {
 // @route   POST api/auth/register
 // @desc    Register initial admin user (should be disabled after first use in production)
 // @access  Public
-router.post("/register", registerLimiter, async (req, res) => {
+router.post("/register", authLimiter, async (req, res) => {
   // This should be secured or disabled in production
   const { username, password } = req.body;
 
@@ -456,6 +499,28 @@ router.post("/logout", auth, async (req, res) => {
     console.error("Logout error:", err);
     res.status(500).send("Server error");
   }
+});
+
+// @route   GET api/auth/my-ip
+// @desc    Get your current IP address (development only)
+// @access  Public (but should be disabled in production)
+router.get("/my-ip", (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({ message: "Not found" });
+  }
+
+  const ip =
+    req.ip ||
+    req.headers["x-forwarded-for"] ||
+    req.connection.remoteAddress ||
+    "Could not detect IP";
+
+  console.log(`IP address check: ${ip}`);
+
+  res.json({
+    ip,
+    message: "Add this IP to your .env file's ALLOWED_ADMIN_IPS variable",
+  });
 });
 
 module.exports = router;
