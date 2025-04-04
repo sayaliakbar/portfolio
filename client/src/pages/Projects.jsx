@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import Section from "../components/Section";
 import ProjectCard from "../components/ProjectCard";
 import { fetchProjects } from "../utils/api";
@@ -93,7 +93,7 @@ const ProjectsPage = () => {
         setFilteredProjects(data);
       } catch (error) {
         // If API fails, use placeholder data
-        console.log("Using placeholder projects data");
+        console.log("Using placeholder projects data:", error);
         setProjects(placeholderProjects);
         setFilteredProjects(placeholderProjects);
       } finally {
@@ -136,7 +136,7 @@ const ProjectsPage = () => {
   return (
     <div className="py-28">
       <div className="container">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -157,12 +157,12 @@ const ProjectsPage = () => {
               &larr; Back to Home
             </Link>
           </div>
-        </motion.div>
+        </Motion.div>
 
         {/* Filter Buttons */}
         <div className="flex flex-wrap justify-center gap-2 mb-12">
           {allTechnologies.map((tech, index) => (
-            <motion.button
+            <Motion.button
               key={index}
               onClick={() => handleFilter(tech)}
               className={`px-4 py-2 rounded-full transition-all ${
@@ -177,7 +177,7 @@ const ProjectsPage = () => {
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               {tech.charAt(0).toUpperCase() + tech.slice(1)}
-            </motion.button>
+            </Motion.button>
           ))}
         </div>
 
@@ -186,7 +186,7 @@ const ProjectsPage = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
           </div>
         ) : (
-          <motion.div
+          <Motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             layout
           >
@@ -201,7 +201,7 @@ const ProjectsPage = () => {
                 </p>
               </div>
             )}
-          </motion.div>
+          </Motion.div>
         )}
       </div>
     </div>
