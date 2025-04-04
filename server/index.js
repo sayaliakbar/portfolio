@@ -8,13 +8,17 @@ const http = require("http");
 const https = require("https");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
+const morgan = require("morgan");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const corsOptions = require("./config/corsOptions");
+const { messageLogger } = require("./middleware/logger");
 
 // Routes
 const projectRoutes = require("./routes/projects");
 const messageRoutes = require("./routes/messages");
 const authRoutes = require("./routes/auth");
+const auth0Routes = require("./routes/auth0");
+const cloudflareRoutes = require("./routes/cloudflareAccess");
 const uploadRoutes = require("./routes/uploads");
 
 // Config
@@ -22,6 +26,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 443;
+
+// Create a logs directory for morgan if it doesn't exist
+const logsDir = path.join(__dirname, "logs");
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// Create a write stream for access logs
+const accessLogStream = fs.createWriteStream(path.join(logsDir, "access.log"), {
+  flags: "a",
+});
 
 // Session configuration
 const sessionConfig = {
@@ -43,7 +58,22 @@ const sessionConfig = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" })); // Limit JSON body size for security
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 app.use(session(sessionConfig));
+
+// Configure Morgan logger based on environment
+if (process.env.NODE_ENV === "production") {
+  // Use common format for production and log to file
+  app.use(morgan("common", { stream: accessLogStream }));
+} else {
+  // Use dev format for development console output
+  app.use(morgan("dev"));
+  // Also log to file in dev mode with more details
+  app.use(morgan("combined", { stream: accessLogStream }));
+}
+
+// Custom message logger
+app.use(messageLogger);
 
 // Apply rate limiting to all API routes
 app.use("/api", apiLimiter);
@@ -52,7 +82,12 @@ app.use("/api", apiLimiter);
 app.use("/api/projects", projectRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/auth0", auth0Routes);
+app.use("/api/cloudflare", cloudflareRoutes);
 app.use("/api/uploads", uploadRoutes);
+
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
 mongoose
