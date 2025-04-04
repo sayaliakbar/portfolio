@@ -15,12 +15,12 @@ const apiLimiter = rateLimit({
 // Stricter rate limiter for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // limit each IP to 5 login attempts per hour
+  max: 10, // increase to 10 to allow database locking to happen first
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     status: 429,
-    message: "Too many login attempts, please try again in an hour",
+    message: "Too many login attempts from this IP. Please try again later.",
   },
   skipSuccessfulRequests: true, // Don't count successful logins against the limit
 });
