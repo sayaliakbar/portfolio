@@ -397,7 +397,16 @@ const HomePage = () => {
                 <span className="text-indigo-600 mr-3">📧</span>
                 <div>
                   <h4 className="font-medium">Email</h4>
-                  <p className="text-gray-600">sayaliakbar@gmail.com</p>
+                  <p className="text-gray-600">
+                    <a
+                      href="https://mail.google.com/mail/?view=cm&fs=1&to=sayaliakbar@gmail.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-indigo-600 transition-colors"
+                    >
+                      sayaliakbar@gmail.com
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>
