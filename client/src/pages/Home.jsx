@@ -106,10 +106,10 @@ const HomePage = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white">
+      <section className="min-h-screen sm:min-h-[85vh] flex items-center relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white">
         <div
           id="home"
-          className="container grid md:grid-cols-2 gap-8 items-center py-20"
+          className="container grid md:grid-cols-2 gap-8 items-center py-12 md:py-20"
         >
           <Motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -188,7 +188,7 @@ const HomePage = () => {
 
         {/* Decorative elements */}
         <Motion.div
-          className="absolute -bottom-16 -right-16 w-64 h-64 bg-indigo-200 rounded-full opacity-20"
+          className="absolute -bottom-16 -right-16 sm:-bottom-32 sm:-right-32 w-48 sm:w-64 h-48 sm:h-64 bg-indigo-200 rounded-full opacity-20"
           animate={{
             scale: [1, 1.1, 1],
           }}
@@ -199,7 +199,7 @@ const HomePage = () => {
           }}
         />
         <Motion.div
-          className="absolute top-20 -left-16 w-32 h-32 bg-sky-200 rounded-full opacity-20"
+          className="absolute top-20 -left-16 sm:-left-24 w-24 sm:w-32 h-24 sm:h-32 bg-sky-200 rounded-full opacity-20"
           animate={{
             scale: [1, 1.2, 1],
           }}
