@@ -1,12 +1,13 @@
 import api from "./api";
+import { jwtDecode } from "jwt-decode";
 
 // Set auth token in localStorage and axios headers
 export const setAuthToken = (token) => {
   if (token) {
-    localStorage.setItem("token", token);
+    localStorage.setItem("auth_token", token);
     api.defaults.headers.common["x-auth-token"] = token;
   } else {
-    localStorage.removeItem("token");
+    localStorage.removeItem("auth_token");
     delete api.defaults.headers.common["x-auth-token"];
   }
 };
@@ -14,9 +15,9 @@ export const setAuthToken = (token) => {
 // Set refresh token in localStorage
 export const setRefreshToken = (token) => {
   if (token) {
-    localStorage.setItem("refreshToken", token);
+    localStorage.setItem("refresh_token", token);
   } else {
-    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("refresh_token");
   }
 };
 
@@ -34,21 +35,29 @@ export const getTempToken = () => {
   return sessionStorage.getItem("tempToken");
 };
 
-// Check if token is valid
+// Check if token is valid and not expired
 export const isAuthenticated = async () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("auth_token");
     if (!token) {
       // Try to refresh the token
       const refreshed = await refreshAuthToken();
       return refreshed;
     }
 
+    // Check if token is expired
+    const decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+
+    if (decoded.exp < currentTime) {
+      console.log("Token expired, attempting to refresh");
+      // Token is expired, try to refresh it
+      const refreshed = await refreshAuthToken();
+      return refreshed;
+    }
+
     // Set the token in headers
     api.defaults.headers.common["x-auth-token"] = token;
-
-    // Verify token by making a request to auth endpoint
-    await api.get("/auth");
     return true;
   } catch (error) {
     console.error("Auth verification error:", error);
@@ -69,7 +78,7 @@ export const isAuthenticated = async () => {
 // Refresh the auth token using the refresh token
 export const refreshAuthToken = async () => {
   try {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) {
       return false;
     }
@@ -222,7 +231,7 @@ export const logoutUser = async () => {
 
 // Initialize auth by setting token from localStorage
 export const initializeAuth = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("auth_token");
   if (token) {
     setAuthToken(token);
   }
