@@ -129,22 +129,47 @@ const ProjectForm = ({ project, onSubmit, onCancel }) => {
   const handleTechKeyDown = (e) => {
     if (e.key === "Enter" && techInput.trim()) {
       e.preventDefault();
-      if (!formData.technologies.includes(techInput.trim())) {
+
+      // Split input by spaces to separate technologies
+      const techArray = techInput
+        .split(/\s+/)
+        .filter((tech) => tech.trim() !== "");
+
+      // Create a new array of technologies to add (excluding duplicates)
+      const newTechs = techArray.filter(
+        (tech) => !formData.technologies.includes(tech)
+      );
+
+      if (newTechs.length > 0) {
         setFormData({
           ...formData,
-          technologies: [...formData.technologies, techInput.trim()],
+          technologies: [...formData.technologies, ...newTechs],
         });
       }
+
       setTechInput("");
     }
   };
 
   const handleAddTech = () => {
-    if (techInput.trim() && !formData.technologies.includes(techInput.trim())) {
-      setFormData({
-        ...formData,
-        technologies: [...formData.technologies, techInput.trim()],
-      });
+    if (techInput.trim()) {
+      // Split input by spaces to separate technologies
+      const techArray = techInput
+        .split(/\s+/)
+        .filter((tech) => tech.trim() !== "");
+
+      // Create a new array of technologies to add (excluding duplicates)
+      const newTechs = techArray.filter(
+        (tech) => !formData.technologies.includes(tech)
+      );
+
+      if (newTechs.length > 0) {
+        setFormData({
+          ...formData,
+          technologies: [...formData.technologies, ...newTechs],
+        });
+      }
+
       setTechInput("");
     }
   };
@@ -335,7 +360,7 @@ const ProjectForm = ({ project, onSubmit, onCancel }) => {
                   <button
                     type="button"
                     onClick={() => handleRemoveTech(tech)}
-                    className="ml-2 text-indigo-600 hover:text-indigo-800"
+                    className="ml-2 text-indigo-600 cursor-pointer hover:text-indigo-800"
                   >
                     &times;
                   </button>
