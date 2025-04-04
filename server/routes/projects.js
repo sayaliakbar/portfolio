@@ -44,6 +44,7 @@ router.post("/", auth, async (req, res) => {
     title: req.body.title,
     description: req.body.description,
     image: req.body.image,
+    imagePublicId: req.body.imagePublicId,
     technologies: req.body.technologies,
     github: req.body.github,
     demo: req.body.demo,
@@ -71,6 +72,7 @@ router.put("/:id", auth, async (req, res) => {
     project.title = req.body.title;
     project.description = req.body.description;
     project.image = req.body.image;
+    project.imagePublicId = req.body.imagePublicId;
     project.technologies = req.body.technologies;
     project.github = req.body.github;
     project.demo = req.body.demo;
@@ -86,14 +88,42 @@ router.put("/:id", auth, async (req, res) => {
 // DELETE a project
 router.delete("/:id", auth, async (req, res) => {
   try {
-    const project = await Project.findByIdAndDelete(req.params.id);
+    const project = await Project.findById(req.params.id);
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    // Delete the associated image from Cloudinary if it exists
+    if (project.imagePublicId) {
+      try {
+        const { cloudinary } = require("../config/cloudinary");
+
+        // Attempt to delete the image
+        const result = await cloudinary.uploader.destroy(project.imagePublicId);
+        console.log(
+          `Deleted image with public ID ${project.imagePublicId}, Result:`,
+          result
+        );
+      } catch (imageError) {
+        console.error(
+          `Error deleting image ${project.imagePublicId} from Cloudinary:`,
+          imageError
+        );
+        console.error(imageError.stack);
+        // Continue with project deletion even if image deletion fails
+      }
+    } else {
+      console.log("No image to delete - imagePublicId is null or undefined");
+    }
+
+    // Delete the project from the database
+    await Project.findByIdAndDelete(req.params.id);
+
     res.json({ message: "Project deleted" });
   } catch (err) {
+    console.error("Error deleting project:", err);
+    console.error(err.stack);
     res.status(500).json({ message: err.message });
   }
 });
