@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 const Navbar = () => {
@@ -72,19 +72,19 @@ const Navbar = () => {
     >
       <div className="container flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <motion.div
+          <Motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-2xl font-bold text-gradient">ALI AKBAR</h1>
-          </motion.div>
+          </Motion.div>
         </Link>
 
         {/* Desktop Menu */}
         <ul className="hidden md:flex space-x-8">
           {navLinks.map((link, index) => (
-            <motion.li
+            <Motion.li
               key={index}
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -105,7 +105,7 @@ const Navbar = () => {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
               )}
-            </motion.li>
+            </Motion.li>
           ))}
         </ul>
 
@@ -124,7 +124,7 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <Motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -133,7 +133,7 @@ const Navbar = () => {
           >
             <ul className="container py-4 space-y-4">
               {navLinks.map((link, index) => (
-                <motion.li
+                <Motion.li
                   key={index}
                   initial={{ x: -10, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -157,10 +157,10 @@ const Navbar = () => {
                       {link.name}
                     </Link>
                   )}
-                </motion.li>
+                </Motion.li>
               ))}
             </ul>
-          </motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </nav>
