@@ -66,7 +66,7 @@ UserSchema.pre("save", async function (next) {
   try {
     // Validate password strength
     const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&-])[A-Za-z\d@$!%*?&-]{8,}$/;
     if (!passwordRegex.test(this.password)) {
       throw new Error(
         "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character"
