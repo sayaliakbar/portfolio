@@ -238,7 +238,7 @@ const ContactForm = () => {
         <Button
           type="submit"
           variant="primary"
-          className="px-8 py-3"
+          className="px-8 py-3 cursor-pointer"
           disabled={submitStatus.submitting}
         >
           {submitStatus.submitting ? "Sending..." : "Send Message"}
