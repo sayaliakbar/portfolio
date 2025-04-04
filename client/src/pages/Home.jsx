@@ -2,20 +2,19 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 import { FaServer, FaDatabase, FaReact } from "react-icons/fa";
+import { useLocation } from "react-router-dom";
 import Section from "../components/Section";
 import ProjectCard from "../components/ProjectCard";
 import SkillCard from "../components/SkillCard";
 import ContactForm from "../components/ContactForm";
 import Button from "../components/Button";
 import { fetchFeaturedProjects } from "../utils/api";
-
-// Temporary placeholder image until you add your own
-const heroImage =
-  "https://images.unsplash.com/photo-1555952517-2e8e729e0b44?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1064&q=80";
+import heroImage from "../assets/hero.png";
 
 const HomePage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -23,9 +22,9 @@ const HomePage = () => {
         // Try to fetch from API first
         const data = await fetchFeaturedProjects();
         setProjects(data);
-      } catch (error) {
+      } catch (err) {
         // If API fails, use placeholder data
-        console.log("Using placeholder projects data");
+        console.log("Using placeholder projects data", err);
         setProjects(placeholderProjects);
       } finally {
         setLoading(false);
@@ -34,6 +33,28 @@ const HomePage = () => {
 
     loadProjects();
   }, []);
+
+  // Handle scrolling when navigated from another page
+  useEffect(() => {
+    // Check if we need to scroll to a specific section
+    if (location.state && location.state.scrollToId) {
+      const targetId = location.state.scrollToId;
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        // Add a small delay to ensure the page is fully loaded
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80, // Adjust for navbar height
+            behavior: "smooth",
+          });
+        }, 100);
+      }
+
+      // Clear the state to prevent scrolling on page refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Skills data
   const skills = [
@@ -107,16 +128,16 @@ const HomePage = () => {
               and modern best practices.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button to="/#projects" variant="primary">
+              <Button to="#projects" variant="primary">
                 View My Work
               </Button>
-              <Button to="/#contact" variant="outline">
+              <Button to="#contact" variant="outline">
                 Contact Me
               </Button>
             </div>
             <div className="flex space-x-4 mt-8">
               <motion.a
-                href="https://github.com"
+                href="https://github.com/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-indigo-600 transition-colors"
@@ -127,7 +148,7 @@ const HomePage = () => {
                 <FaGithub size={24} />
               </motion.a>
               <motion.a
-                href="https://linkedin.com"
+                href="https://linkedin.com/in/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-indigo-600 transition-colors"
@@ -138,7 +159,7 @@ const HomePage = () => {
                 <FaLinkedin size={24} />
               </motion.a>
               <motion.a
-                href="https://twitter.com"
+                href="https://x.com/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-indigo-600 transition-colors"
