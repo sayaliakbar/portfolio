@@ -1,20 +1,39 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "../context/auth0-context";
+import { useAdmin } from "../context/AdminContext";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
+  const {
+    isAuthenticated: isAuth0Authenticated,
+    isLoading: isAuth0Loading,
+    loginWithRedirect,
+  } = useAuth0();
+  const { isAuthenticated: isJwtAuthenticated, isLoading: isJwtLoading } =
+    useAdmin();
+  const navigate = useNavigate();
+
+  // Check both authentication methods
+  const isAuthenticated = isAuth0Authenticated || isJwtAuthenticated;
+  const isLoading = isAuth0Loading || isJwtLoading;
 
   useEffect(() => {
-    const redirectToLogin = async () => {
+    const checkAuth = async () => {
       if (!isLoading && !isAuthenticated) {
-        await loginWithRedirect({
-          appState: { returnTo: window.location.pathname },
-        });
+        // If using Auth0, redirect to Auth0 login
+        if (import.meta.env.VITE_AUTH0_DOMAIN) {
+          await loginWithRedirect({
+            appState: { returnTo: window.location.pathname },
+          });
+        } else {
+          // Otherwise redirect to our custom login
+          navigate("/admin/login", { replace: true });
+        }
       }
     };
 
-    redirectToLogin();
-  }, [isAuthenticated, isLoading, loginWithRedirect]);
+    checkAuth();
+  }, [isAuthenticated, isLoading, loginWithRedirect, navigate]);
 
   if (isLoading) {
     return (
