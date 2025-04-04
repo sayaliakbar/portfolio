@@ -12,6 +12,7 @@ const morgan = require("morgan");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const corsOptions = require("./config/corsOptions");
 const { messageLogger } = require("./middleware/logger");
+const connectDB = require("./config/database");
 
 // Routes
 const projectRoutes = require("./routes/projects");
@@ -47,11 +48,17 @@ const sessionConfig = {
     mongoUrl: process.env.MONGO_URI,
     collectionName: "sessions",
     ttl: 60 * 60 * 24, // 1 day
+    touchAfter: 24 * 3600, // time period in seconds to refresh session
+    crypto: {
+      secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
+    },
+    autoRemove: "native", // Use MongoDB's TTL index
   }),
   cookie: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 1 day
+    sameSite: "strict",
   },
 };
 
@@ -90,10 +97,14 @@ app.use("/api/uploads", uploadRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log("MongoDB Connection Error:", err));
+connectDB()
+  .then(() => {
+    console.log("Database connection established successfully");
+  })
+  .catch((err) => {
+    console.error("Could not connect to database:", err);
+    process.exit(1);
+  });
 
 // Production setup
 if (process.env.NODE_ENV === "production") {
