@@ -136,10 +136,10 @@ const Navbar = () => {
         </ul>
 
         {/* Mobile Menu Toggle */}
-        <div className="md:hidden">
+        <div className="md:hidden ">
           <button
             onClick={toggleMenu}
-            className="focus:outline-none"
+            className="focus:outline-none cursor-pointer"
             aria-label={isOpen ? "Close Menu" : "Open Menu"}
           >
             {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
