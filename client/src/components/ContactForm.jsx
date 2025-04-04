@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion as Motion } from "framer-motion";
 import Button from "./Button";
 import axios from "axios";
@@ -84,21 +84,24 @@ const ContactForm = () => {
     setSubmitStatus({ submitting: true, success: null, error: null });
 
     try {
-      const response = await axios.post("/messages", formData);
+      // Use a local variable to avoid unnecessary re-renders
+      const submittedData = { ...formData };
+
+      const response = await axios.post("/messages", submittedData);
 
       if (response.data.success) {
-        setSubmitStatus({
-          submitting: false,
-          success: "Your message has been sent successfully!",
-          error: null,
-        });
-
-        // Reset form
+        // Clear form first to improve perceived performance
         setFormData({
           name: "",
           email: "",
           subject: "",
           message: "",
+        });
+
+        setSubmitStatus({
+          submitting: false,
+          success: "Your message has been sent successfully!",
+          error: null,
         });
       } else {
         throw new Error(response.data.message || "Something went wrong");
@@ -115,19 +118,45 @@ const ContactForm = () => {
     }
   };
 
-  // Input animation
-  const inputVariants = {
-    focus: { scale: 1.02, transition: { duration: 0.2 } },
-    blur: { scale: 1, transition: { duration: 0.2 } },
-  };
+  // Input animation optimized with useMemo
+  const inputVariants = useMemo(
+    () => ({
+      focus: {
+        scale: 1.02,
+        transition: {
+          duration: 0.2,
+          type: "tween", // Use tween instead of spring for better performance
+        },
+      },
+      blur: {
+        scale: 1,
+        transition: {
+          duration: 0.2,
+          type: "tween",
+        },
+      },
+    }),
+    []
+  );
+
+  const statusMotionProps = useMemo(
+    () => ({
+      initial: { opacity: 0, y: -20 },
+      animate: { opacity: 1, y: 0 },
+      transition: {
+        type: "tween",
+        duration: 0.3,
+      },
+    }),
+    []
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {submitStatus.success && (
         <Motion.div
           className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...statusMotionProps}
         >
           {submitStatus.success}
         </Motion.div>
@@ -136,8 +165,7 @@ const ContactForm = () => {
       {submitStatus.error && (
         <Motion.div
           className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...statusMotionProps}
         >
           {submitStatus.error}
         </Motion.div>

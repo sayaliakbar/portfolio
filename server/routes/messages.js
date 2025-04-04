@@ -32,7 +32,14 @@ router.post("/", async (req, res) => {
     // Save to database
     const newMessage = await message.save();
 
-    // Send email notification
+    // Send response immediately
+    res.status(201).json({
+      success: true,
+      message: "Message sent successfully",
+      data: newMessage,
+    });
+
+    // Send email notification asynchronously (don't await)
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER, // Send to yourself
@@ -47,12 +54,8 @@ router.post("/", async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
-
-    res.status(201).json({
-      success: true,
-      message: "Message sent successfully",
-      data: newMessage,
+    transporter.sendMail(mailOptions).catch((error) => {
+      console.error("Error sending email notification:", error);
     });
   } catch (err) {
     res.status(400).json({
