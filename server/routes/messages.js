@@ -3,8 +3,34 @@ const router = express.Router();
 const Message = require("../models/Message");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
 
 dotenv.config();
+
+// Ensure logs directory exists
+const logsDir = path.join(__dirname, "../logs");
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// Function to log email service status
+const logEmailServiceStatus = (status, details = null) => {
+  const timestamp = new Date().toISOString();
+  const logStream = fs.createWriteStream(
+    path.join(logsDir, "email-service.log"),
+    { flags: "a" }
+  );
+
+  let logMessage = `[${timestamp}] EMAIL SERVICE STATUS: ${status}\n`;
+  if (details) {
+    logMessage += `DETAILS: ${JSON.stringify(details)}\n`;
+  }
+  logMessage += "------------------------\n";
+
+  logStream.write(logMessage);
+  logStream.end();
+};
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
@@ -19,8 +45,20 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// POST a new message
+// Verify transporter configuration
+transporter.verify((error) => {
+  if (error) {
+    console.error("Email service error:", error);
+    logEmailServiceStatus("ERROR", error);
+  } else {
+    console.log("Email service is ready to send messages");
+    logEmailServiceStatus("READY");
+  }
+});
+
+// POST a new message - fully async/await with proper error handling
 router.post("/", async (req, res) => {
+  // Create a new message document
   const message = new Message({
     name: req.body.name,
     email: req.body.email,
@@ -32,14 +70,7 @@ router.post("/", async (req, res) => {
     // Save to database
     const newMessage = await message.save();
 
-    // Send response immediately
-    res.status(201).json({
-      success: true,
-      message: "Message sent successfully",
-      data: newMessage,
-    });
-
-    // Send email notification asynchronously (don't await)
+    // Prepare email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER, // Send to yourself
@@ -54,13 +85,53 @@ router.post("/", async (req, res) => {
       `,
     };
 
-    transporter.sendMail(mailOptions).catch((error) => {
-      console.error("Error sending email notification:", error);
-    });
-  } catch (err) {
-    res.status(400).json({
+    try {
+      // Send email and wait for it to complete
+      logEmailServiceStatus("SENDING", {
+        to: process.env.EMAIL_USER,
+        subject: `Portfolio Contact: ${req.body.subject}`,
+        from: req.body.email,
+      });
+
+      await transporter.sendMail(mailOptions);
+
+      logEmailServiceStatus("SENT_SUCCESS", {
+        to: process.env.EMAIL_USER,
+        subject: `Portfolio Contact: ${req.body.subject}`,
+        from: req.body.email,
+      });
+
+      // If we reach here, both database save and email sending succeeded
+      res.status(201).json({
+        success: true,
+        message: "Message sent successfully",
+        data: newMessage,
+      });
+    } catch (emailError) {
+      // Email sending failed - log error and send specific response
+      console.error("Error sending email notification:", emailError);
+      logEmailServiceStatus("SENT_FAILURE", {
+        error: emailError.message,
+        to: process.env.EMAIL_USER,
+        subject: `Portfolio Contact: ${req.body.subject}`,
+        from: req.body.email,
+      });
+
+      // Still return success since we saved to database, but indicate email failure
+      res.status(201).json({
+        success: true,
+        message: "Message saved, but email notification failed",
+        emailError: true,
+        data: newMessage,
+      });
+    }
+  } catch (dbError) {
+    // Database save failed
+    console.error("Error saving message to database:", dbError);
+    res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Failed to save your message",
+      error: dbError.message,
     });
   }
 });
