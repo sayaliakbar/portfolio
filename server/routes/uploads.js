@@ -15,6 +15,7 @@ router.post("/image", auth, upload.single("image"), async (req, res) => {
     });
   } catch (error) {
     console.error("Upload error:", error);
+    console.error(error.stack);
     res.status(500).json({ message: "Image upload failed" });
   }
 });
@@ -28,11 +29,12 @@ router.delete("/image/:publicId", auth, async (req, res) => {
     const publicId = req.params.publicId;
 
     // Delete the image from cloudinary
-    await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId);
 
     res.json({ message: "Image deleted successfully" });
   } catch (error) {
-    console.error("Image deletion error:", error);
+    console.error(`Image deletion error for ID ${req.params.publicId}:`, error);
+    console.error(error.stack);
     res.status(500).json({ message: "Image deletion failed" });
   }
 });
