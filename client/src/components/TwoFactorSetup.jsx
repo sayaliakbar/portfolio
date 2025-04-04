@@ -258,7 +258,13 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
 
           <button
             type="button"
-            onClick={onSetupComplete}
+            onClick={() => {
+              setShowBackupCodes(false);
+              setIsSettingUp(false);
+              if (onSetupComplete) {
+                onSetupComplete();
+              }
+            }}
             className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded"
           >
             I've Saved My Backup Codes
