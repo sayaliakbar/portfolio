@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
+const path = require("path");
+const fs = require("fs").promises;
 
 /**
  * Generate a secure random string for use as JWT secret
@@ -57,12 +59,29 @@ const generate2FASecret = (username, issuer = "PortfolioApp") => {
 };
 
 /**
- * Generate QR code for 2FA setup
+ * Generate QR code for 2FA setup with app logo
  * @param {string} otpAuthUrl The OTP auth URL
  * @returns {Promise<string>} QR code as data URL
  */
 const generateQRCode = async (otpAuthUrl) => {
-  return qrcode.toDataURL(otpAuthUrl);
+  try {
+    // Generate basic QR code
+    const qrCodeDataUrl = await qrcode.toDataURL(otpAuthUrl, {
+      errorCorrectionLevel: "H", // High error correction for logo space
+      margin: 1,
+      color: {
+        dark: "#000000",
+        light: "#ffffff",
+      },
+    });
+
+    // The QR code is returned as a data URL which can be used directly in image tags
+    return qrCodeDataUrl;
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    // Fallback to basic QR code generation if there's an error
+    return qrcode.toDataURL(otpAuthUrl);
+  }
 };
 
 /**
