@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion as Motion } from "framer-motion";
 import { setup2FA, verifyAnd2FA, disable2FA } from "../utils/auth";
 
 const TwoFactorSetup = ({ user, onSetupComplete }) => {
+  // Debug output
+
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [isDisabling, setIsDisabling] = useState(false);
   const [setupData, setSetupData] = useState(null);
@@ -12,6 +14,54 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [twoFactorStatus, setTwoFactorStatus] = useState(
+    user?.twoFactorEnabled || false
+  );
+
+  // Update local status when user prop changes
+  useEffect(() => {
+    if (user) {
+      console.log(
+        "User prop changed, updating twoFactorStatus:",
+        user.twoFactorEnabled
+      );
+      setTwoFactorStatus(user.twoFactorEnabled || false);
+    } else {
+      // Reset status if user is null/undefined
+      console.log("User is null/undefined, resetting twoFactorStatus");
+      setTwoFactorStatus(false);
+    }
+  }, [user]);
+
+  // Force refresh when showing the component
+  useEffect(() => {
+    // If onSetupComplete is available, trigger a refresh
+    if (onSetupComplete && user === null) {
+      console.log("Initial load with null user, requesting refresh");
+      onSetupComplete();
+    }
+  }, []);
+
+  // Auto-hide success message after 5 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  // Reset shake effect after animation completes
+  useEffect(() => {
+    if (shake) {
+      const timer = setTimeout(() => {
+        setShake(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [shake]);
 
   const handleStartSetup = async () => {
     setError("");
@@ -40,19 +90,39 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
     setSuccess("");
     setLoading(true);
 
+    if (!verificationCode || verificationCode.trim() === "") {
+      setError("Please enter a verification code");
+      setShake(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await verifyAnd2FA(verificationCode);
       if (result.success) {
+        // Update user object locally to reflect enabled 2FA status
+        if (user) {
+          user.twoFactorEnabled = true;
+        }
+        // Update local status state immediately
+        setTwoFactorStatus(true);
         setSuccess("Two-factor authentication enabled successfully!");
         setShowBackupCodes(true);
         if (onSetupComplete) {
           onSetupComplete();
         }
       } else {
-        setError(result.message || "Verification failed");
+        setError(
+          result.message ||
+            "Verification failed. Please check your code and try again."
+        );
+        setShake(true);
+        // Focus on the verification code input field after error
+        document.getElementById("verificationCode")?.focus();
       }
     } catch (err) {
-      setError("Verification failed. Please try again.");
+      setError("Verification failed. Please check your code and try again.");
+      setShake(true);
       console.error("2FA verification error:", err);
     } finally {
       setLoading(false);
@@ -68,6 +138,12 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
     try {
       const result = await disable2FA(disablePassword);
       if (result.success) {
+        // Update user object locally to reflect disabled 2FA status
+        if (user) {
+          user.twoFactorEnabled = false;
+        }
+        // Update local status state immediately
+        setTwoFactorStatus(false);
         setSuccess("Two-factor authentication disabled successfully!");
         setIsDisabling(false);
         if (onSetupComplete) {
@@ -113,12 +189,12 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
             Status:{" "}
             <span
               className={
-                user?.twoFactorEnabled
+                twoFactorStatus
                   ? "text-green-600 font-medium"
                   : "text-red-600 font-medium"
               }
             >
-              {user?.twoFactorEnabled ? "Enabled" : "Disabled"}
+              {twoFactorStatus ? "Enabled" : "Disabled"}
             </span>
           </p>
           <p className="text-sm text-gray-500">
@@ -129,7 +205,7 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          {user?.twoFactorEnabled ? (
+          {twoFactorStatus ? (
             <button
               type="button"
               onClick={() => setIsDisabling(true)}
@@ -228,7 +304,8 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
           : "Setup Two-Factor Authentication"}
       </h2>
 
-      {error && (
+      {/* Only show main error box for non-verification errors or during backup codes display */}
+      {error && (showBackupCodes || !verificationCode) && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
           {error}
         </div>
@@ -278,15 +355,31 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
             verification code provided by the app.
           </p>
 
-          {setupData?.qrCode && (
-            <div className="flex justify-center mb-4">
-              <img
-                src={setupData.qrCode}
-                alt="QR Code for 2FA"
-                className="border p-2 rounded"
-              />
+          <div className="flex flex-col items-center mb-4">
+            <div className="mb-3 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <img
+                  src="/favicon.svg"
+                  alt="PortfolioApp Logo"
+                  className="w-8 h-8 mr-2"
+                />
+                <h3 className="text-lg font-semibold">PortfolioApp</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Authenticator setup for {user?.username}
+              </p>
             </div>
-          )}
+
+            {setupData?.qrCode && (
+              <div className="border p-3 rounded shadow-sm">
+                <img
+                  src={setupData.qrCode}
+                  alt="QR Code for 2FA"
+                  className="w-48 h-48"
+                />
+              </div>
+            )}
+          </div>
 
           <div className="mb-4">
             <p className="text-sm text-gray-500 mb-2">
@@ -306,15 +399,27 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
               >
                 Verification Code
               </label>
-              <input
-                type="text"
-                id="verificationCode"
-                placeholder="Enter 6-digit code"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                required
-                className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
+              <Motion.div
+                animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
+                <input
+                  type="text"
+                  id="verificationCode"
+                  placeholder="Enter 6-digit code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  required
+                  className={`border ${
+                    error
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                  } rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-opacity-50`}
+                />
+              </Motion.div>
+              {error && !showBackupCodes && (
+                <p className="mt-1 text-sm text-red-600">{error}</p>
+              )}
             </div>
 
             <div className="flex gap-3">
