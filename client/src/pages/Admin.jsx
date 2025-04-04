@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
-import { fetchProjects, deleteProject } from "../utils/api";
+import {
+  fetchProjects,
+  deleteProject,
+  fetchUnreadMessageCount,
+} from "../utils/api";
 import { isAuthenticated as checkAuthStatus, logoutUser } from "../utils/auth";
 import AdminLogin from "../components/AdminLogin";
 import ProjectForm from "../components/ProjectForm";
 import TwoFactorSetup from "../components/TwoFactorSetup";
+import MessagesManager from "../components/MessagesManager";
 import api from "../utils/api";
 
 const Admin = () => {
@@ -16,6 +21,7 @@ const Admin = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [userData, setUserData] = useState(null);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +33,7 @@ const Admin = () => {
       if (authStatus) {
         loadProjects();
         loadUserData();
+        loadUnreadMessageCount();
       } else {
         setLoading(false);
       }
@@ -56,11 +63,21 @@ const Admin = () => {
     }
   };
 
+  const loadUnreadMessageCount = async () => {
+    try {
+      const count = await fetchUnreadMessageCount();
+      setUnreadMessageCount(count);
+    } catch (error) {
+      console.error("Error loading unread message count:", error);
+    }
+  };
+
   const handleLogin = (success) => {
     if (success) {
       setIsAuthenticated(true);
       loadProjects();
       loadUserData();
+      loadUnreadMessageCount();
     }
   };
 
@@ -118,10 +135,18 @@ const Admin = () => {
       setEditingProject(null);
     }
 
-    // Reload user data when switching to security tab
+    // Reload data when switching tabs
     if (tab === "security") {
       loadUserData();
     }
+
+    // Always reload unread message count when switching tabs
+    loadUnreadMessageCount();
+  };
+
+  // Function to decrement unread count when a message is read
+  const decrementUnreadCount = () => {
+    setUnreadMessageCount((prevCount) => Math.max(0, prevCount - 1));
   };
 
   if (!isAuthenticated) {
@@ -213,6 +238,46 @@ const Admin = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
+          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg shadow-lg p-6"
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-lg font-medium opacity-90">Messages</p>
+              <h3 className="text-3xl font-bold mt-2">
+                {unreadMessageCount > 0 ? `${unreadMessageCount} new` : "0 new"}
+              </h3>
+            </div>
+            <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={() => handleTabSwitch("messages")}
+              className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
+            >
+              View All
+            </button>
+          </div>
+        </Motion.div>
+
+        <Motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
           className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow-lg p-6"
         >
           <div className="flex justify-between items-start">
@@ -245,48 +310,6 @@ const Admin = () => {
               className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
             >
               Manage
-            </button>
-          </div>
-        </Motion.div>
-
-        <Motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-lg p-6"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-lg font-medium opacity-90">Last Login</p>
-              <h3 className="text-xl font-bold mt-2">
-                {userData?.lastLogin
-                  ? new Date(userData.lastLogin).toLocaleDateString()
-                  : "Unknown"}
-              </h3>
-            </div>
-            <div className="p-3 bg-white bg-opacity-30 rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-          <div className="mt-4">
-            <button
-              onClick={handleLogout}
-              className="text-sm bg-white bg-opacity-20 hover:bg-opacity-30 py-1 px-3 rounded-full transition-colors duration-200 cursor-pointer"
-            >
-              Logout
             </button>
           </div>
         </Motion.div>
@@ -398,30 +421,142 @@ const Admin = () => {
                     <p className="text-sm text-gray-500">
                       Two-Factor Authentication
                     </p>
-                    <p className="font-medium flex items-center">
+                    <p className="font-medium">
                       {userData?.twoFactorEnabled ? (
-                        <>
-                          <span className="block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                          Enabled
-                        </>
+                        <span className="text-green-600">Enabled</span>
                       ) : (
-                        <>
-                          <span className="block w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                          Disabled
-                        </>
+                        <span className="text-amber-600">Disabled</span>
                       )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Last Login</p>
+                    <p className="font-medium">
+                      {userData?.lastLogin
+                        ? new Date(userData.lastLogin).toLocaleString()
+                        : "Unknown"}
                     </p>
                   </div>
                   <div className="pt-2">
                     <button
-                      onClick={() => handleTabSwitch("security")}
-                      className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors cursor-pointer"
+                      onClick={handleLogout}
+                      className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
                     >
-                      Security Settings
+                      Logout
                     </button>
                   </div>
                 </div>
               </div>
+            </div>
+          </Motion.div>
+        );
+      case "projects":
+        return (
+          <Motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="bg-white rounded-lg shadow-md">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold">Projects</h2>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Manage your portfolio projects
+                  </p>
+                </div>
+                <button
+                  onClick={handleAddProject}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                >
+                  Add Project
+                </button>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : (
+                <div className="p-6">
+                  {projects.length === 0 ? (
+                    <div className="text-center py-8">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                        />
+                      </svg>
+                      <p className="text-gray-500">
+                        No projects found. Create your first project!
+                      </p>
+                      <button
+                        onClick={handleAddProject}
+                        className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                      >
+                        Add Project
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {projects.map((project) => (
+                        <div
+                          key={project._id || project.id}
+                          className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+                        >
+                          <div
+                            className="h-48 bg-gray-200 bg-cover bg-center"
+                            style={{
+                              backgroundImage: project.image
+                                ? `url(${project.image})`
+                                : "none",
+                            }}
+                          ></div>
+                          <div className="p-4">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-semibold text-lg">
+                                {project.title}
+                              </h3>
+                              {project.featured && (
+                                <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded">
+                                  Featured
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-500 mt-2 line-clamp-2">
+                              {project.description}
+                            </p>
+                            <div className="flex mt-4 space-x-2">
+                              <button
+                                onClick={() => handleEditProject(project)}
+                                className="flex-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition-colors cursor-pointer"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteProject(project._id || project.id)
+                                }
+                                className="flex-1 bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </Motion.div>
         );
@@ -431,229 +566,120 @@ const Admin = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-md p-6"
           >
-            <h2 className="text-xl font-semibold mb-6">Security Settings</h2>
-            <TwoFactorSetup
-              user={userData}
-              onSetupComplete={handleTwoFactorSetupComplete}
-            />
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold mb-4">Security Settings</h2>
+
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <h3 className="text-lg font-medium mb-4">
+                  Two-Factor Authentication (2FA)
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Add an extra layer of security to your account by enabling
+                  two-factor authentication. When 2FA is enabled, you'll need to
+                  provide a verification code from your authentication app when
+                  logging in.
+                </p>
+
+                <TwoFactorSetup
+                  enabled={userData?.twoFactorEnabled || false}
+                  onSetupComplete={handleTwoFactorSetupComplete}
+                />
+              </div>
+            </div>
           </Motion.div>
         );
-      case "projects":
-      default:
+      case "messages":
         return (
           <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-                <h2 className="text-xl font-semibold mb-2 sm:mb-0">
-                  Manage Projects
-                </h2>
-                <button
-                  onClick={handleAddProject}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors cursor-pointer"
-                >
-                  Add New Project
-                </button>
-              </div>
-
-              {loading ? (
-                <div className="flex justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full rounded-lg overflow-hidden">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Title</th>
-                        <th className="py-3 px-4 text-left hidden md:table-cell">
-                          Description
-                        </th>
-                        <th className="py-3 px-4 text-left hidden sm:table-cell">
-                          Technologies
-                        </th>
-                        <th className="py-3 px-4 text-center">Featured</th>
-                        <th className="py-3 px-4 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {projects.length > 0 ? (
-                        projects.map((project) => (
-                          <tr
-                            key={project._id || project.id}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="py-3 px-4 font-medium">
-                              {project.title}
-                            </td>
-                            <td className="py-3 px-4 hidden md:table-cell">
-                              <div className="truncate max-w-xs">
-                                {project.description}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 hidden sm:table-cell">
-                              <div className="flex flex-wrap gap-1">
-                                {project.technologies
-                                  .slice(0, 3)
-                                  .map((tech, index) => (
-                                    <span
-                                      key={index}
-                                      className="px-2 py-1 bg-gray-100 text-xs rounded-full"
-                                    >
-                                      {tech}
-                                    </span>
-                                  ))}
-                                {project.technologies.length > 3 && (
-                                  <span className="px-2 py-1 bg-gray-100 text-xs rounded-full">
-                                    +{project.technologies.length - 3}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <span
-                                className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-                                  project.featured
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {project.featured ? "✓" : "×"}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <div className="flex flex-col sm:flex-row justify-center gap-2">
-                                <button
-                                  onClick={() => handleEditProject(project)}
-                                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition-colors text-sm cursor-pointer"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteProject(
-                                      project._id || project.id
-                                    )
-                                  }
-                                  className="bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition-colors text-sm cursor-pointer"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan="5"
-                            className="py-6 px-4 text-center text-gray-500"
-                          >
-                            No projects found. Add your first project!
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <MessagesManager onMessageRead={decrementUnreadCount} />
           </Motion.div>
         );
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="py-16 md:py-24 bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4">
-        <Motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Navigation Bar */}
+      <header className="bg-white shadow-sm z-10 pt-11">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Admin Dashboard
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Manage your portfolio content
-              </p>
-            </div>
-            <div className="mt-4 sm:mt-0">
               <button
                 onClick={handleLogout}
-                className="flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors shadow-sm cursor-pointer"
+                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer px-3 py-2 rounded-md hover:bg-gray-100"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
                 Logout
               </button>
             </div>
           </div>
+        </div>
+      </header>
 
-          {/* Tab Navigation */}
-          <div className="flex overflow-x-auto pb-2 mb-6 -mx-4 px-4 sm:px-0 sm:mx-0">
-            <nav className="flex space-x-1 sm:space-x-4">
-              <button
-                onClick={() => handleTabSwitch("dashboard")}
-                className={`px-3 sm:px-4 py-2 rounded-md font-medium text-sm cursor-pointer ${
-                  activeTab === "dashboard"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-200"
-                }`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => handleTabSwitch("projects")}
-                className={`px-3 sm:px-4 py-2 rounded-md font-medium text-sm cursor-pointer ${
-                  activeTab === "projects"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-200"
-                }`}
-              >
-                Projects
-              </button>
-              <button
-                onClick={() => handleTabSwitch("security")}
-                className={`px-3 sm:px-4 py-2 rounded-md font-medium text-sm cursor-pointer ${
-                  activeTab === "security"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-200"
-                }`}
-              >
-                Security
-              </button>
-              <button
-                onClick={handleAddProject}
-                className="px-3 sm:px-4 py-2 rounded-md font-medium text-sm bg-green-600 text-white shadow-sm hover:bg-green-700 cursor-pointer"
-              >
-                New Project
-              </button>
-            </nav>
+      {/* Tab Navigation - Separate section */}
+      <nav className="bg-white shadow-md border-t border-gray-200 z-10">
+        <div className="container mx-auto px-4">
+          <div className="flex overflow-x-auto">
+            <button
+              onClick={() => handleTabSwitch("dashboard")}
+              className={`px-4 py-3 font-medium text-sm transition-colors duration-150 cursor-pointer whitespace-nowrap ${
+                activeTab === "dashboard"
+                  ? "text-indigo-600 border-b-2 border-indigo-600"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => handleTabSwitch("projects")}
+              className={`px-4 py-3 font-medium text-sm transition-colors duration-150 cursor-pointer whitespace-nowrap ${
+                activeTab === "projects" || isAdding || editingProject
+                  ? "text-indigo-600 border-b-2 border-indigo-600"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              Projects
+            </button>
+            <button
+              onClick={() => handleTabSwitch("messages")}
+              className={`px-4 py-3 font-medium text-sm transition-colors duration-150 cursor-pointer whitespace-nowrap ${
+                activeTab === "messages"
+                  ? "text-indigo-600 border-b-2 border-indigo-600"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              Messages
+              {unreadMessageCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                  {unreadMessageCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => handleTabSwitch("security")}
+              className={`px-4 py-3 font-medium text-sm transition-colors duration-150 cursor-pointer whitespace-nowrap ${
+                activeTab === "security"
+                  ? "text-indigo-600 border-b-2 border-indigo-600"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              Security
+            </button>
           </div>
+        </div>
+      </nav>
 
-          {renderTabContent()}
-        </Motion.div>
-      </div>
+      {/* Main Content with spacing from navigation */}
+      <main className="flex-grow container mx-auto px-4 py-6">
+        {renderTabContent()}
+      </main>
     </div>
   );
 };
