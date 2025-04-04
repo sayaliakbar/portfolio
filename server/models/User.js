@@ -88,8 +88,13 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
 
 // Method to handle failed login attempts
 UserSchema.methods.incrementLoginAttempts = async function () {
+  console.log(
+    `Incrementing login attempts for ${this.username}, current: ${this.loginAttempts}`
+  );
+
   // If lock has expired, reset login attempts
   if (this.lockUntil && this.lockUntil < new Date()) {
+    console.log(`Lock expired for ${this.username}, resetting counter`);
     return this.updateOne({
       $set: { loginAttempts: 1 },
       $unset: { lockUntil: 1 },
@@ -99,10 +104,12 @@ UserSchema.methods.incrementLoginAttempts = async function () {
   // Otherwise increment login attempts
   const updates = { $inc: { loginAttempts: 1 } };
 
-  // Lock the account if more than 5 attempts
-  if (this.loginAttempts + 1 >= 5 && !this.lockUntil) {
+  // Lock the account if 5 or more attempts (after this increment)
+  if (this.loginAttempts + 1 >= 5) {
     // Lock for 1 hour
-    updates.$set = { lockUntil: new Date(Date.now() + 3600000) };
+    const lockUntil = new Date(Date.now() + 3600000);
+    console.log(`Locking account ${this.username} until ${lockUntil}`);
+    updates.$set = { lockUntil: lockUntil };
   }
 
   return this.updateOne(updates);
