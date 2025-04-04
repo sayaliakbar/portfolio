@@ -27,6 +27,26 @@ const Navbar = () => {
     };
   }, []);
 
+  // Handle scroll to section when navigating from another page
+  useEffect(() => {
+    if (location.state && location.state.scrollToId) {
+      const targetId = location.state.scrollToId;
+
+      // Small delay to ensure the DOM is fully loaded
+      setTimeout(() => {
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: "smooth",
+          });
+        }
+        // Clear the state to prevent scrolling on subsequent renders
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 500);
+    }
+  }, [location.state, navigate, location.pathname]);
+
   const navLinks = [
     { name: "Home", path: "#home" },
     { name: "About", path: "#about" },
@@ -40,27 +60,33 @@ const Navbar = () => {
       e.preventDefault();
       const targetId = path.substring(1);
 
-      // Check if we're on the homepage
-      if (location.pathname === "/") {
-        // If on the homepage, just scroll to the element
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-          window.scrollTo({
-            top: targetElement.offsetTop - 80, // Adjust for navbar height
-            behavior: "smooth",
-          });
-        }
-      } else {
-        // If not on the homepage, navigate to homepage first, then scroll
-        navigate("/", {
-          state: { scrollToId: targetId },
-        });
-      }
-
       // Close mobile menu if open
-      if (isOpen) {
+      const isMobile = isOpen;
+      if (isMobile) {
         setIsOpen(false);
       }
+
+      // Slight delay for mobile to let menu close animation finish
+      const scrollDelay = isMobile ? 300 : 0;
+
+      setTimeout(() => {
+        // Check if we're on the homepage
+        if (location.pathname === "/") {
+          // If on the homepage, just scroll to the element
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            window.scrollTo({
+              top: targetElement.offsetTop - 80, // Adjust for navbar height
+              behavior: "smooth",
+            });
+          }
+        } else {
+          // If not on the homepage, navigate to homepage first, then scroll
+          navigate("/", {
+            state: { scrollToId: targetId },
+          });
+        }
+      }, scrollDelay);
     }
   };
 
