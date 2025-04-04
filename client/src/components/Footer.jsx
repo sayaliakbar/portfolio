@@ -16,7 +16,7 @@ const Footer = () => {
             </p>
             <div className="flex space-x-4">
               <a
-                href="https://github.com"
+                href="https://github.com/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
@@ -24,7 +24,7 @@ const Footer = () => {
                 <FaGithub className="text-xl hover:text-indigo-400 transition-colors" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://linkedin.com/in/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
@@ -32,14 +32,14 @@ const Footer = () => {
                 <FaLinkedin className="text-xl hover:text-indigo-400 transition-colors" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/sayaliakbar"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Twitter"
               >
                 <FaTwitter className="text-xl hover:text-indigo-400 transition-colors" />
               </a>
-              <a href="mailto:email@example.com" aria-label="Email">
+              <a href="mailto:sayaliakbar@gmail.com" aria-label="Email">
                 <FaEnvelope className="text-xl hover:text-indigo-400 transition-colors" />
               </a>
             </div>
@@ -93,8 +93,8 @@ const Footer = () => {
 
           <div>
             <h3 className="text-xl font-bold mb-4">Contact Info</h3>
-            <p className="text-gray-300 mb-2">Email: email@example.com</p>
-            <p className="text-gray-300 mb-2">Location: City, Country</p>
+            <p className="text-gray-300 mb-2">Email: sayaliakbar@gmail.com</p>
+            <p className="text-gray-300 mb-2">Location: Quetta, Pakistan</p>
           </div>
         </div>
 
