@@ -256,3 +256,15 @@ export const registerAdmin = async (credentials) => {
     };
   }
 };
+
+// Debug function to check authentication status
+export const checkAuthStatus = async () => {
+  try {
+    const response = await api.get("/auth/check-auth");
+    console.log("Auth status:", response.data);
+    return response.data.authenticated;
+  } catch (error) {
+    console.error("Auth check error:", error);
+    return false;
+  }
+};
