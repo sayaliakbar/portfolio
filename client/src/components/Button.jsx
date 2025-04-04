@@ -22,7 +22,10 @@ const Button = ({
   // Handle smooth scrolling for hash links
   const handleHashLinkClick = (e) => {
     e.preventDefault();
-    const targetId = to.substring(1);
+
+    // If the link contains a slash (/), extract only the hash part
+    const hash = to.includes("/") ? to.split("/").pop() : to;
+    const targetId = hash.substring(1);
     const targetElement = document.getElementById(targetId);
 
     if (targetElement) {
