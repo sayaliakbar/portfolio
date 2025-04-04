@@ -1,5 +1,5 @@
 import { motion as Motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Button = ({
   children,
@@ -11,6 +11,8 @@ const Button = ({
   ...props
 }) => {
   const baseClasses = `btn btn-${variant} ${className}`;
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Animation variants
   const buttonVariants = {
@@ -23,16 +25,38 @@ const Button = ({
   const handleHashLinkClick = (e) => {
     e.preventDefault();
 
-    // If the link contains a slash (/), extract only the hash part
-    const hash = to.includes("/") ? to.split("/").pop() : to;
-    const targetId = hash.substring(1);
-    const targetElement = document.getElementById(targetId);
+    // Check if the link is in format /#hash or just #hash
+    if (to.startsWith("/#")) {
+      // For links in format /#hash
+      const targetId = to.substring(2);
 
-    if (targetElement) {
-      window.scrollTo({
-        top: targetElement.offsetTop - 80, // Adjust for navbar height
-        behavior: "smooth",
-      });
+      // Check if we're on the homepage
+      if (location.pathname === "/") {
+        // If on the homepage, just scroll to the element
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80, // Adjust for navbar height
+            behavior: "smooth",
+          });
+        }
+      } else {
+        // If not on the homepage, navigate to homepage first, then scroll
+        navigate("/", {
+          state: { scrollToId: targetId },
+        });
+      }
+    } else if (to.startsWith("#")) {
+      // For links in format #hash (same page navigation)
+      const targetId = to.substring(1);
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 80, // Adjust for navbar height
+          behavior: "smooth",
+        });
+      }
     }
 
     if (onClick) onClick(e);
@@ -40,7 +64,7 @@ const Button = ({
 
   // If "to" prop is provided, render Link component or anchor for hash links
   if (to) {
-    if (to.startsWith("#")) {
+    if (to.startsWith("#") || to.startsWith("/#")) {
       return (
         <Motion.div
           variants={buttonVariants}
