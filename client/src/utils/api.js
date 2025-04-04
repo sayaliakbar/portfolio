@@ -71,9 +71,25 @@ export const deleteProject = async (id) => {
 
 export const sendMessage = async (messageData) => {
   try {
-    const response = await api.post("/messages", messageData);
+    // Set a timeout to detect slow/unresponsive server
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    const response = await api.post("/messages", messageData, {
+      signal: controller.signal,
+    });
+
+    // Clear timeout since request completed
+    clearTimeout(timeoutId);
+
+    // Return the data from the response
     return response.data;
   } catch (error) {
+    // Check if this was a timeout error
+    if (error.name === "AbortError") {
+      throw new Error("Request timed out. Server may be down or unreachable.");
+    }
+
     console.error("Error sending message:", error);
     throw error;
   }
