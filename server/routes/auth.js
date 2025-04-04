@@ -341,7 +341,7 @@ router.post("/setup-2fa", auth, async (req, res) => {
     }
 
     // Generate new secret
-    const secret = generate2FASecret(user.username);
+    const secret = generate2FASecret(user.username, "PortfolioApp");
 
     // Generate QR code
     const qrCode = await generateQRCode(secret.otpauth_url);
