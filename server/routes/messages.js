@@ -5,6 +5,7 @@ const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const fs = require("fs");
 const path = require("path");
+const requireAuth = require("../middleware/auth");
 
 dotenv.config();
 
@@ -132,6 +133,212 @@ router.post("/", async (req, res) => {
       success: false,
       message: "Failed to save your message",
       error: dbError.message,
+    });
+  }
+});
+
+// GET all messages (admin only)
+router.get("/", requireAuth, async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      count: messages.length,
+      data: messages,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch messages",
+      error: error.message,
+    });
+  }
+});
+
+// GET unread message count (admin only)
+router.get("/unread-count", requireAuth, async (req, res) => {
+  try {
+    const count = await Message.countDocuments({ isRead: false });
+    res.status(200).json({
+      success: true,
+      count,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch unread count",
+      error: error.message,
+    });
+  }
+});
+
+// PATCH mark message as read (admin only)
+router.patch("/:id/read", requireAuth, async (req, res) => {
+  const messageId = req.params.id;
+  console.log(`PATCH: Marking message as read: ${messageId}`);
+
+  if (!messageId || !messageId.match(/^[0-9a-fA-F]{24}$/)) {
+    console.log(`Invalid message ID format: ${messageId}`);
+    return res.status(400).json({
+      success: false,
+      message: "Invalid message ID format",
+    });
+  }
+
+  try {
+    console.log("User authenticated:", req.user.id);
+
+    // Check if message exists first
+    let messageExists;
+    try {
+      messageExists = await Message.findById(messageId);
+      console.log("Message found:", !!messageExists);
+    } catch (findError) {
+      console.error("Error finding message:", findError);
+      return res.status(500).json({
+        success: false,
+        message: "Error finding message",
+        error: findError.message,
+      });
+    }
+
+    if (!messageExists) {
+      console.log(`Message not found: ${messageId}`);
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    console.log("Original message isRead status:", messageExists.isRead);
+
+    // Update the message
+    let message;
+    try {
+      message = await Message.findByIdAndUpdate(
+        messageId,
+        { isRead: true },
+        { new: true }
+      );
+      console.log(`Message marked as read:`, message);
+      console.log(`New isRead status:`, message.isRead);
+    } catch (updateError) {
+      console.error("Error updating message:", updateError);
+      return res.status(500).json({
+        success: false,
+        message: "Error updating message",
+        error: updateError.message,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: message,
+    });
+  } catch (error) {
+    console.error("Error updating message status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update message status",
+      error: error.message,
+    });
+  }
+});
+
+// POST mark message as read (admin only) - alternative to PATCH for clients that don't support PATCH
+router.post("/:id/read", requireAuth, async (req, res) => {
+  const messageId = req.params.id;
+  console.log(`POST: Marking message as read: ${messageId}`);
+
+  if (!messageId || !messageId.match(/^[0-9a-fA-F]{24}$/)) {
+    console.log(`Invalid message ID format: ${messageId}`);
+    return res.status(400).json({
+      success: false,
+      message: "Invalid message ID format",
+    });
+  }
+
+  try {
+    console.log("User authenticated:", req.user.id);
+
+    // Check if message exists first
+    let messageExists;
+    try {
+      messageExists = await Message.findById(messageId);
+      console.log("Message found:", !!messageExists);
+    } catch (findError) {
+      console.error("Error finding message:", findError);
+      return res.status(500).json({
+        success: false,
+        message: "Error finding message",
+        error: findError.message,
+      });
+    }
+
+    if (!messageExists) {
+      console.log(`Message not found: ${messageId}`);
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    console.log("Original message isRead status:", messageExists.isRead);
+
+    // Update the message
+    let message;
+    try {
+      message = await Message.findByIdAndUpdate(
+        messageId,
+        { isRead: true },
+        { new: true }
+      );
+      console.log(`Message marked as read:`, message);
+      console.log(`New isRead status:`, message.isRead);
+    } catch (updateError) {
+      console.error("Error updating message:", updateError);
+      return res.status(500).json({
+        success: false,
+        message: "Error updating message",
+        error: updateError.message,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: message,
+    });
+  } catch (error) {
+    console.error("Error updating message status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update message status",
+      error: error.message,
+    });
+  }
+});
+
+// DELETE a message (admin only)
+router.delete("/:id", requireAuth, async (req, res) => {
+  try {
+    const message = await Message.findByIdAndDelete(req.params.id);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Message deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete message",
+      error: error.message,
     });
   }
 });
