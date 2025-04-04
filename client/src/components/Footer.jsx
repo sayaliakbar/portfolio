@@ -124,14 +124,6 @@ const Footer = () => {
                   Contact
                 </a>
               </li>
-              <li>
-                <Link
-                  to="/admin"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Admin
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -150,6 +142,16 @@ const Footer = () => {
             </p>
             <p className="text-gray-300 mb-2">Location: Quetta, Pakistan</p>
           </div>
+        </div>
+
+        {/* Admin access moved outside the main links to be less prominent */}
+        <div className="text-center mt-8 text-sm text-gray-400">
+          <Link
+            to="/admin/login"
+            className="hover:text-gray-300 transition-colors"
+          >
+            Administration
+          </Link>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
