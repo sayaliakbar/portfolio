@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import Button from "./Button";
 import axios from "axios";
 
@@ -109,23 +109,23 @@ const ContactForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {submitStatus.success && (
-        <motion.div
+        <Motion.div
           className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           {submitStatus.success}
-        </motion.div>
+        </Motion.div>
       )}
 
       {submitStatus.error && (
-        <motion.div
+        <Motion.div
           className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           {submitStatus.error}
-        </motion.div>
+        </Motion.div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,7 +136,7 @@ const ContactForm = () => {
           >
             Name *
           </label>
-          <motion.div
+          <Motion.div
             variants={inputVariants}
             initial="blur"
             whileFocus="focus"
@@ -151,7 +151,7 @@ const ContactForm = () => {
                 errors.name ? "border-red-500" : "border-gray-300"
               }`}
             />
-          </motion.div>
+          </Motion.div>
           {errors.name && (
             <p className="mt-1 text-sm text-red-600">{errors.name}</p>
           )}
@@ -164,7 +164,7 @@ const ContactForm = () => {
           >
             Email *
           </label>
-          <motion.div
+          <Motion.div
             variants={inputVariants}
             initial="blur"
             whileFocus="focus"
@@ -179,7 +179,7 @@ const ContactForm = () => {
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
             />
-          </motion.div>
+          </Motion.div>
           {errors.email && (
             <p className="mt-1 text-sm text-red-600">{errors.email}</p>
           )}
@@ -193,7 +193,7 @@ const ContactForm = () => {
         >
           Subject *
         </label>
-        <motion.div variants={inputVariants} initial="blur" whileFocus="focus">
+        <Motion.div variants={inputVariants} initial="blur" whileFocus="focus">
           <input
             type="text"
             id="subject"
@@ -204,7 +204,7 @@ const ContactForm = () => {
               errors.subject ? "border-red-500" : "border-gray-300"
             }`}
           />
-        </motion.div>
+        </Motion.div>
         {errors.subject && (
           <p className="mt-1 text-sm text-red-600">{errors.subject}</p>
         )}
@@ -217,7 +217,7 @@ const ContactForm = () => {
         >
           Message *
         </label>
-        <motion.div variants={inputVariants} initial="blur" whileFocus="focus">
+        <Motion.div variants={inputVariants} initial="blur" whileFocus="focus">
           <textarea
             id="message"
             name="message"
@@ -228,7 +228,7 @@ const ContactForm = () => {
               errors.message ? "border-red-500" : "border-gray-300"
             }`}
           ></textarea>
-        </motion.div>
+        </Motion.div>
         {errors.message && (
           <p className="mt-1 text-sm text-red-600">{errors.message}</p>
         )}
