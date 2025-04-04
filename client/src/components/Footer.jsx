@@ -1,8 +1,34 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope } from "react-icons/fa";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleHashLinkClick = (e, path) => {
+    if (path.startsWith("/#")) {
+      e.preventDefault();
+      const targetId = path.substring(2);
+
+      // Check if we're on the homepage
+      if (location.pathname === "/") {
+        // If on the homepage, just scroll to the element
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80, // Adjust for navbar height
+            behavior: "smooth",
+          });
+        }
+      } else {
+        // If not on the homepage, navigate to homepage first, then scroll
+        navigate("/", {
+          state: { scrollToId: targetId },
+        });
+      }
+    }
+  };
 
   return (
     <footer className="bg-gray-900 text-white py-12">
@@ -39,7 +65,12 @@ const Footer = () => {
               >
                 <FaTwitter className="text-xl hover:text-indigo-400 transition-colors" />
               </a>
-              <a href="mailto:sayaliakbar@gmail.com" aria-label="Email">
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=sayaliakbar@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Email"
+              >
                 <FaEnvelope className="text-xl hover:text-indigo-400 transition-colors" />
               </a>
             </div>
@@ -50,50 +81,65 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/"
+                  to="/#home"
                   className="text-gray-300 hover:text-white transition-colors"
+                  onClick={(e) => handleHashLinkClick(e, "/#home")}
                 >
                   Home
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/#about"
+                <a
+                  href="/#about"
                   className="text-gray-300 hover:text-white transition-colors"
+                  onClick={(e) => handleHashLinkClick(e, "/#about")}
                 >
                   About
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
-                  to="/#skills"
+                <a
+                  href="/#skills"
                   className="text-gray-300 hover:text-white transition-colors"
+                  onClick={(e) => handleHashLinkClick(e, "/#skills")}
                 >
                   Skills
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
-                  to="/#projects"
+                <a
+                  href="/#projects"
                   className="text-gray-300 hover:text-white transition-colors"
+                  onClick={(e) => handleHashLinkClick(e, "/#projects")}
                 >
                   Projects
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
-                  to="/#contact"
+                <a
+                  href="/#contact"
                   className="text-gray-300 hover:text-white transition-colors"
+                  onClick={(e) => handleHashLinkClick(e, "/#contact")}
                 >
                   Contact
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-xl font-bold mb-4">Contact Info</h3>
-            <p className="text-gray-300 mb-2">Email: sayaliakbar@gmail.com</p>
+            <p className="text-gray-300 mb-2">
+              Email:{" "}
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=sayaliakbar@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-indigo-400 transition-colors"
+              >
+                sayaliakbar@gmail.com
+              </a>
+            </p>
             <p className="text-gray-300 mb-2">Location: Quetta, Pakistan</p>
           </div>
         </div>
