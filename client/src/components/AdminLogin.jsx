@@ -41,11 +41,31 @@ const AdminLogin = ({ onLogin }) => {
             onLogin(true);
           }
         } else {
-          setError(result.message);
+          // Show appropriate message based on the error
+          if (
+            result.message &&
+            result.message.includes("Access denied from your location")
+          ) {
+            setError(
+              "This admin area is restricted to authorized locations only."
+            );
+          } else {
+            setError(result.message);
+          }
         }
       }
     } catch (err) {
-      setError("Authentication failed. Please try again.");
+      if (
+        err.response &&
+        err.response.status === 403 &&
+        err.response.data &&
+        err.response.data.message &&
+        err.response.data.message.includes("Access denied")
+      ) {
+        setError("This admin area is restricted to authorized locations only.");
+      } else {
+        setError("Authentication failed. Please try again.");
+      }
       console.error("Authentication error:", err);
     } finally {
       setLoading(false);
