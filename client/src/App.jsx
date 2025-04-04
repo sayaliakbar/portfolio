@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -10,22 +9,11 @@ import Admin from "./pages/Admin";
 import Auth0Login from "./components/Auth0Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth0 } from "./context/auth0-context";
-import "./App.css";
 
 function App() {
-  const [loading, setLoading] = useState(true);
   const { isLoading } = useAuth0();
 
-  useEffect(() => {
-    // Simulate loading time for better UX
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="flex flex-col items-center">
