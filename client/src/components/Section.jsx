@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const Section = ({
   id,
@@ -30,7 +30,7 @@ const Section = ({
       className={`py-20 ${light ? "bg-white" : "bg-gray-50"} ${className}`}
     >
       <div className={`container ${containerClassName}`}>
-        <motion.div
+        <Motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
@@ -44,7 +44,7 @@ const Section = ({
           )}
 
           {subtitle && (
-            <motion.p
+            <Motion.p
               className={`text-gray-600 mt-4 max-w-2xl mx-auto ${subtitleClassName}`}
               variants={{
                 hidden: { opacity: 0, y: 20 },
@@ -56,18 +56,18 @@ const Section = ({
               }}
             >
               {subtitle}
-            </motion.p>
+            </Motion.p>
           )}
-        </motion.div>
+        </Motion.div>
 
-        <motion.div
+        <Motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
           variants={sectionVariants}
         >
           {children}
-        </motion.div>
+        </Motion.div>
       </div>
     </section>
   );
