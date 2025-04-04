@@ -9,9 +9,17 @@ import Admin from "./pages/Admin";
 import Auth0Login from "./components/Auth0Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth0 } from "./context/auth0-context";
+import { AdminProvider } from "./context/AdminContext";
+import { useEffect } from "react";
+import { initializeAuth } from "./utils/auth";
 
 function App() {
   const { isLoading } = useAuth0();
+
+  // Initialize auth from localStorage on app start
+  useEffect(() => {
+    initializeAuth();
+  }, []);
 
   if (isLoading) {
     return (
@@ -25,33 +33,35 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow">
-        <Routes>
-          {/* Public routes accessible to everyone */}
-          <Route path="/" element={<Home />} />
-          <Route path="/projects" element={<Projects />} />
+    <AdminProvider>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            {/* Public routes accessible to everyone */}
+            <Route path="/" element={<Home />} />
+            <Route path="/projects" element={<Projects />} />
 
-          {/* Admin authentication */}
-          <Route path="/admin/login" element={<Auth0Login />} />
+            {/* Admin authentication */}
+            <Route path="/admin/login" element={<Auth0Login />} />
 
-          {/* Protected admin routes */}
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected admin routes */}
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
-      <ScrollToTop />
-    </div>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        <Footer />
+        <ScrollToTop />
+      </div>
+    </AdminProvider>
   );
 }
 
