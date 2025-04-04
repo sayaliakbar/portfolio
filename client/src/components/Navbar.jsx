@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -37,12 +39,21 @@ const Navbar = () => {
     if (path.startsWith("#")) {
       e.preventDefault();
       const targetId = path.substring(1);
-      const targetElement = document.getElementById(targetId);
 
-      if (targetElement) {
-        window.scrollTo({
-          top: targetElement.offsetTop - 80, // Adjust for navbar height
-          behavior: "smooth",
+      // Check if we're on the homepage
+      if (location.pathname === "/") {
+        // If on the homepage, just scroll to the element
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80, // Adjust for navbar height
+            behavior: "smooth",
+          });
+        }
+      } else {
+        // If not on the homepage, navigate to homepage first, then scroll
+        navigate("/", {
+          state: { scrollToId: targetId },
         });
       }
 
