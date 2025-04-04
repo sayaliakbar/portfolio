@@ -192,7 +192,11 @@ const ProjectsPage = () => {
           >
             {filteredProjects.length > 0 ? (
               filteredProjects.map((project, index) => (
-                <ProjectCard key={project.id} project={project} index={index} />
+                <ProjectCard
+                  key={project._id}
+                  project={project}
+                  index={index}
+                />
               ))
             ) : (
               <div className="col-span-full text-center py-12">

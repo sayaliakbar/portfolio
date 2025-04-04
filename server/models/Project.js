@@ -13,6 +13,10 @@ const ProjectSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  imagePublicId: {
+    type: String,
+    default: null,
+  },
   technologies: {
     type: [String],
     required: true,

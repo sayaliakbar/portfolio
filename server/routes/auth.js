@@ -1,0 +1,461 @@
+const express = require("express");
+const router = express.Router();
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const auth = require("../middleware/auth");
+const { authLimiter, registerLimiter } = require("../middleware/rateLimiter");
+const {
+  comparePassword,
+  generate2FASecret,
+  generateQRCode,
+  verify2FAToken,
+  generateBackupCodes,
+  hashBackupCodes,
+  verifyBackupCode,
+  generateSecureToken,
+} = require("../utils/securityUtils");
+
+// @route   POST api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
+router.post("/login", authLimiter, async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // See if user exists
+    let user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid Credentials" });
+    }
+
+    // Check if account is locked
+    if (user.isLocked()) {
+      const lockTime = Math.ceil((user.lockUntil - new Date()) / 60000);
+      return res.status(403).json({
+        message: `Account is locked. Try again in ${lockTime} minutes.`,
+      });
+    }
+
+    // Check password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      // Increment login attempts
+      await user.incrementLoginAttempts();
+
+      // If account is now locked, inform the user
+      if (user.loginAttempts + 1 >= 5) {
+        return res.status(403).json({
+          message:
+            "Too many failed login attempts. Account is locked for 1 hour.",
+        });
+      }
+
+      return res.status(400).json({ message: "Invalid Credentials" });
+    }
+
+    // Password matched - reset login attempts and set last login
+    await User.findByIdAndUpdate(user._id, {
+      loginAttempts: 0,
+      lockUntil: null,
+      lastLogin: new Date(),
+    });
+
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      // Return a temporary token to identify the user for 2FA verification
+      const tempPayload = {
+        temp: true,
+        userId: user.id,
+      };
+
+      const tempToken = jwt.sign(
+        tempPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: "5m" } // Short expiry for 2FA step
+      );
+
+      return res.json({
+        requiresTwoFactor: true,
+        tempToken,
+      });
+    }
+
+    // Generate access token and refresh token
+    const payload = {
+      user: {
+        id: user.id,
+        role: user.role,
+      },
+    };
+
+    // Generate refresh token
+    const refreshToken = generateSecureToken();
+
+    // Save refresh token to database with expiry
+    await user.updateRefreshToken(refreshToken);
+
+    // Generate access token with shorter expiry
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
+      (err, token) => {
+        if (err) throw err;
+        res.json({
+          token,
+          refreshToken,
+        });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   POST api/auth/verify-2fa
+// @desc    Verify 2FA code and complete login
+// @access  Public (with temporary token)
+router.post("/verify-2fa", authLimiter, async (req, res) => {
+  const { tempToken, code, isBackupCode } = req.body;
+
+  if (!tempToken || !code) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    // Verify temp token
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+
+    if (!decoded.temp || !decoded.userId) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    let isValid = false;
+    let usedBackupCodeIndex = null;
+
+    // Check if using backup code or regular 2FA code
+    if (isBackupCode) {
+      // Verify backup code
+      const result = await verifyBackupCode(code, user.twoFactorBackupCodes);
+      isValid = result.isValid;
+      usedBackupCodeIndex = result.index;
+    } else {
+      // Verify TOTP code
+      isValid = verify2FAToken(code, user.twoFactorSecret);
+    }
+
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid verification code" });
+    }
+
+    // If backup code was used, remove it
+    if (isBackupCode && usedBackupCodeIndex !== null) {
+      const backupCodes = [...user.twoFactorBackupCodes];
+      backupCodes.splice(usedBackupCodeIndex, 1);
+      await User.findByIdAndUpdate(user._id, {
+        twoFactorBackupCodes: backupCodes,
+      });
+    }
+
+    // Generate tokens
+    const payload = {
+      user: {
+        id: user.id,
+        role: user.role,
+      },
+    };
+
+    // Generate refresh token
+    const refreshToken = generateSecureToken();
+
+    // Save refresh token to database
+    await user.updateRefreshToken(refreshToken);
+
+    // Generate access token with shorter expiry
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
+      (err, token) => {
+        if (err) throw err;
+        res.json({
+          token,
+          refreshToken,
+        });
+      }
+    );
+  } catch (err) {
+    console.error("2FA verification error:", err.message);
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Verification session expired" });
+    }
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   POST api/auth/refresh
+// @desc    Refresh access token using refresh token
+// @access  Public (with refresh token)
+router.post("/refresh", authLimiter, async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token required" });
+  }
+
+  try {
+    // Find user with this refresh token
+    const user = await User.findOne({ refreshToken });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    // Check if refresh token is expired
+    if (!user.refreshTokenExpiry || user.refreshTokenExpiry < new Date()) {
+      return res.status(401).json({ message: "Refresh token expired" });
+    }
+
+    // Generate new access token
+    const payload = {
+      user: {
+        id: user.id,
+        role: user.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }, // Shorter expiry for access token
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error("Refresh token error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   GET api/auth
+// @desc    Get user data
+// @access  Private
+router.get("/", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select(
+      "-password -refreshToken -twoFactorSecret -twoFactorBackupCodes"
+    );
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route   POST api/auth/register
+// @desc    Register initial admin user (should be disabled after first use in production)
+// @access  Public
+router.post("/register", registerLimiter, async (req, res) => {
+  // This should be secured or disabled in production
+  const { username, password } = req.body;
+
+  // In production, check against environment variables or another secure method
+  const isValidSetup =
+    username === process.env.ADMIN_USERNAME &&
+    password === process.env.ADMIN_PASSWORD;
+
+  if (!isValidSetup) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized to create admin account" });
+  }
+
+  try {
+    // Check if an admin already exists
+    const existingAdmin = await User.findOne({ role: "admin" });
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Admin user already exists" });
+    }
+
+    const user = new User({
+      username,
+      password,
+      role: "admin",
+    });
+
+    await user.save();
+
+    // Generate refresh token
+    const refreshToken = generateSecureToken();
+
+    // Save refresh token to database
+    await user.updateRefreshToken(refreshToken);
+
+    // Return jsonwebtoken
+    const payload = {
+      user: {
+        id: user.id,
+        role: user.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
+      (err, token) => {
+        if (err) throw err;
+        res.status(201).json({ token, refreshToken });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+
+    // Handle password strength validation error
+    if (err.message.includes("Password must be")) {
+      return res.status(400).json({ message: err.message });
+    }
+
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   POST api/auth/setup-2fa
+// @desc    Setup 2FA for user
+// @access  Private
+router.post("/setup-2fa", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate new secret
+    const secret = generate2FASecret(user.username);
+
+    // Generate QR code
+    const qrCode = await generateQRCode(secret.otpauth_url);
+
+    // Generate backup codes
+    const backupCodes = generateBackupCodes();
+    const hashedBackupCodes = await hashBackupCodes(backupCodes);
+
+    // Save secret and backup codes to user
+    user.twoFactorSecret = secret.base32;
+    user.twoFactorBackupCodes = hashedBackupCodes;
+    // Don't enable 2FA yet - will be enabled after verification
+    await user.save();
+
+    res.json({
+      secret: secret.base32,
+      qrCode,
+      backupCodes,
+    });
+  } catch (err) {
+    console.error("2FA setup error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   POST api/auth/verify-setup-2fa
+// @desc    Verify and enable 2FA
+// @access  Private
+router.post("/verify-setup-2fa", auth, async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Verification code required" });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify token
+    const isValid = verify2FAToken(token, user.twoFactorSecret);
+
+    if (!isValid) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    // Enable 2FA
+    user.twoFactorEnabled = true;
+    await user.save();
+
+    res.json({
+      message: "Two-factor authentication enabled successfully",
+    });
+  } catch (err) {
+    console.error("2FA verification error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   POST api/auth/disable-2fa
+// @desc    Disable 2FA
+// @access  Private
+router.post("/disable-2fa", auth, async (req, res) => {
+  const { password } = req.body;
+
+  if (!password) {
+    return res
+      .status(400)
+      .json({ message: "Password required to disable 2FA" });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+
+    // Verify password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // Disable 2FA
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    user.twoFactorBackupCodes = [];
+    await user.save();
+
+    res.json({
+      message: "Two-factor authentication disabled successfully",
+    });
+  } catch (err) {
+    console.error("Disable 2FA error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route   POST api/auth/logout
+// @desc    Invalidate refresh token
+// @access  Private
+router.post("/logout", auth, async (req, res) => {
+  try {
+    // Clear the refresh token
+    await User.findByIdAndUpdate(req.user.id, {
+      refreshToken: null,
+      refreshTokenExpiry: null,
+    });
+
+    res.json({ message: "Logged out successfully" });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+module.exports = router;

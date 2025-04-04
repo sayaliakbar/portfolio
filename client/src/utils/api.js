@@ -39,12 +39,72 @@ export const fetchProjectById = async (id) => {
   }
 };
 
+export const createProject = async (projectData) => {
+  try {
+    const response = await api.post("/projects", projectData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating project:", error);
+    throw error;
+  }
+};
+
+export const updateProject = async (id, projectData) => {
+  try {
+    const response = await api.put(`/projects/${id}`, projectData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating project ${id}:`, error);
+    throw error;
+  }
+};
+
+export const deleteProject = async (id) => {
+  try {
+    const response = await api.delete(`/projects/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting project ${id}:`, error);
+    throw error;
+  }
+};
+
 export const sendMessage = async (messageData) => {
   try {
     const response = await api.post("/messages", messageData);
     return response.data;
   } catch (error) {
     console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
+export const uploadProjectImage = async (imageFile) => {
+  try {
+    // Create form data
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    // Set content type to multipart/form-data for file upload
+    const response = await api.post("/uploads/image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
+
+export const deleteProjectImage = async (publicId) => {
+  try {
+    const response = await api.delete(`/uploads/image/${publicId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting image:", error);
     throw error;
   }
 };

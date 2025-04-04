@@ -6,7 +6,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 import axios from "axios";
+import { initializeAuth } from "./utils/auth";
 import "./App.css";
 
 function App() {
@@ -16,6 +18,9 @@ function App() {
     // Configure axios to use our API base URL
     axios.defaults.baseURL =
       import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+    // Initialize authentication
+    initializeAuth();
 
     // Simulate loading time for better UX
     const timer = setTimeout(() => {
@@ -44,6 +49,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
