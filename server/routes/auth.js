@@ -523,4 +523,15 @@ router.get("/my-ip", (req, res) => {
   });
 });
 
+// GET auth status (debug route)
+router.get("/check-auth", auth, (req, res) => {
+  res.json({
+    authenticated: true,
+    user: {
+      id: req.user.id,
+      role: req.user.role,
+    },
+  });
+});
+
 module.exports = router;
