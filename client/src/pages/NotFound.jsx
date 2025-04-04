@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import Button from "../components/Button";
 
 const NotFound = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -20,10 +20,10 @@ const NotFound = () => {
         <Button to="/" variant="primary" className="mx-auto">
           Return Home
         </Button>
-      </motion.div>
+      </Motion.div>
 
       {/* Decorative elements */}
-      <motion.div
+      <Motion.div
         className="absolute -bottom-16 -right-16 w-64 h-64 bg-indigo-200 rounded-full opacity-20 -z-10"
         animate={{
           scale: [1, 1.1, 1],
@@ -34,7 +34,7 @@ const NotFound = () => {
           ease: "easeInOut",
         }}
       />
-      <motion.div
+      <Motion.div
         className="absolute top-20 -left-16 w-32 h-32 bg-sky-200 rounded-full opacity-20 -z-10"
         animate={{
           scale: [1, 1.2, 1],
