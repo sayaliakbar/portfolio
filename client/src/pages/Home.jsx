@@ -86,7 +86,10 @@ const HomePage = () => {
     <div>
       {/* Hero Section */}
       <section className="min-h-screen flex items-center relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white">
-        <div className="container grid md:grid-cols-2 gap-8 items-center py-20">
+        <div
+          id="home"
+          className="container grid md:grid-cols-2 gap-8 items-center py-20"
+        >
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -190,7 +193,7 @@ const HomePage = () => {
 
       {/* About Section */}
       <Section
-        id="#about"
+        id="about"
         title="About Me"
         subtitle="Learn more about my background and what drives me as a developer"
         light={true}

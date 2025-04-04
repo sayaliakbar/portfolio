@@ -26,12 +26,32 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About", path: "/#about" },
-    { name: "Skills", path: "/#skills" },
-    { name: "Projects", path: "/#projects" },
-    { name: "Contact", path: "/#contact" },
+    { name: "Home", path: "#home" },
+    { name: "About", path: "#about" },
+    { name: "Skills", path: "#skills" },
+    { name: "Projects", path: "#projects" },
+    { name: "Contact", path: "#contact" },
   ];
+
+  const handleNavLinkClick = (e, path) => {
+    if (path.startsWith("#")) {
+      e.preventDefault();
+      const targetId = path.substring(1);
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 80, // Adjust for navbar height
+          behavior: "smooth",
+        });
+      }
+
+      // Close mobile menu if open
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    }
+  };
 
   return (
     <nav
@@ -46,7 +66,7 @@ const Navbar = () => {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-2xl font-bold text-gradient">Portfolio</h1>
+            <h1 className="text-2xl font-bold text-gradient">ALI AKBAR</h1>
           </motion.div>
         </Link>
 
@@ -59,10 +79,21 @@ const Navbar = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-              <Link to={link.path} className="font-medium relative group">
-                {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              {link.path.startsWith("#") ? (
+                <a
+                  href={link.path}
+                  className="font-medium relative group"
+                  onClick={(e) => handleNavLinkClick(e, link.path)}
+                >
+                  {link.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+              ) : (
+                <Link to={link.path} className="font-medium relative group">
+                  {link.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              )}
             </motion.li>
           ))}
         </ul>
@@ -98,13 +129,23 @@ const Navbar = () => {
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   className="border-b border-gray-100 pb-2"
                 >
-                  <Link
-                    to={link.path}
-                    className="block font-medium"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
+                  {link.path.startsWith("#") ? (
+                    <a
+                      href={link.path}
+                      className="block font-medium"
+                      onClick={(e) => handleNavLinkClick(e, link.path)}
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.path}
+                      className="block font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </motion.li>
               ))}
             </ul>

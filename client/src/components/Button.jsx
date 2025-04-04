@@ -19,8 +19,44 @@ const Button = ({
     tap: { scale: 0.95 },
   };
 
-  // If "to" prop is provided, render Link component
+  // Handle smooth scrolling for hash links
+  const handleHashLinkClick = (e) => {
+    e.preventDefault();
+    const targetId = to.substring(1);
+    const targetElement = document.getElementById(targetId);
+
+    if (targetElement) {
+      window.scrollTo({
+        top: targetElement.offsetTop - 80, // Adjust for navbar height
+        behavior: "smooth",
+      });
+    }
+
+    if (onClick) onClick(e);
+  };
+
+  // If "to" prop is provided, render Link component or anchor for hash links
   if (to) {
+    if (to.startsWith("#")) {
+      return (
+        <motion.div
+          variants={buttonVariants}
+          initial="initial"
+          whileHover="hover"
+          whileTap="tap"
+        >
+          <a
+            href={to}
+            className={baseClasses}
+            onClick={handleHashLinkClick}
+            {...props}
+          >
+            {children}
+          </a>
+        </motion.div>
+      );
+    }
+
     return (
       <motion.div
         variants={buttonVariants}
