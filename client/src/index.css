@@ -6,6 +6,9 @@
   --secondary: #0ea5e9;
   --dark: #111827;
   --light: #f9fafb;
+  --gradient-start: #f3f4f6;
+  --gradient-end: #e5e7eb;
+  --gradient-accent: rgba(79, 70, 229, 0.03);
 }
 
 html {
@@ -14,8 +17,13 @@ html {
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--light);
+  background: linear-gradient(135deg,
+      var(--gradient-start) 0%,
+      var(--gradient-accent) 50%,
+      var(--gradient-end) 100%);
+  background-attachment: fixed;
   color: var(--dark);
+  min-height: 100vh;
 }
 
 /* Component Classes */
