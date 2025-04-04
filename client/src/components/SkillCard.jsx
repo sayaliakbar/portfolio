@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const SkillCard = ({ skill, index }) => {
   const { icon: Icon, name, level } = skill;
 
   return (
-    <motion.div
+    <Motion.div
       className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -24,7 +24,7 @@ const SkillCard = ({ skill, index }) => {
         ></div>
       </div>
       <span className="text-xs text-gray-500 mt-1">{level}%</span>
-    </motion.div>
+    </Motion.div>
   );
 };
 
