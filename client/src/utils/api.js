@@ -9,6 +9,13 @@ const api = axios.create({
   },
 });
 
+// Initialize with token from localStorage if available
+const token = localStorage.getItem("auth_token");
+if (token) {
+  api.defaults.headers.common["x-auth-token"] = token;
+  console.log("Initialized API with token from localStorage");
+}
+
 // Helper function to check if token is expired
 const isTokenExpired = (token) => {
   if (!token) return true;
@@ -28,6 +35,8 @@ api.interceptors.request.use(
   (config) => {
     // Get token from localStorage
     const token = localStorage.getItem("auth_token");
+    console.log("API Request to:", config.url);
+    console.log("Token exists:", !!token);
 
     // If token exists, check if it's expired
     if (token) {
@@ -46,6 +55,7 @@ api.interceptors.request.use(
 
       // Token is valid, add to headers
       config.headers["x-auth-token"] = token;
+      console.log("Added token to request headers");
     }
 
     return config;
@@ -157,6 +167,82 @@ export const sendMessage = async (messageData) => {
     }
 
     console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
+// New Message API functions
+export const fetchMessages = async () => {
+  try {
+    // Ensure token is included
+    const token = localStorage.getItem("auth_token");
+    const headers = token ? { "x-auth-token": token } : {};
+
+    const response = await api.get("/messages", { headers });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    throw error;
+  }
+};
+
+export const fetchUnreadMessageCount = async () => {
+  try {
+    // Ensure token is included
+    const token = localStorage.getItem("auth_token");
+    const headers = token ? { "x-auth-token": token } : {};
+
+    const response = await api.get("/messages/unread-count", { headers });
+    return response.data.count;
+  } catch (error) {
+    console.error("Error fetching unread message count:", error);
+    throw error;
+  }
+};
+
+export const markMessageAsRead = async (id) => {
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  const attemptMarkAsRead = async () => {
+    try {
+      // Ensure token is included
+      const token = localStorage.getItem("auth_token");
+      const headers = token ? { "x-auth-token": token } : {};
+
+      // Try POST instead of PATCH as some servers may not handle PATCH properly
+      const response = await api.post(`/messages/${id}/read`, {}, { headers });
+      console.log("Mark as read response:", response);
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Attempt ${attempts + 1} failed: Error marking message ${id} as read:`,
+        error
+      );
+
+      if (attempts < maxAttempts - 1) {
+        attempts++;
+        console.log(`Retrying (${attempts}/${maxAttempts - 1})...`);
+        return attemptMarkAsRead(); // Retry
+      }
+
+      throw error; // If we've reached max attempts, rethrow the error
+    }
+  };
+
+  return attemptMarkAsRead();
+};
+
+export const deleteMessage = async (id) => {
+  try {
+    // Ensure token is included
+    const token = localStorage.getItem("auth_token");
+    const headers = token ? { "x-auth-token": token } : {};
+
+    const response = await api.delete(`/messages/${id}`, { headers });
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting message ${id}:`, error);
     throw error;
   }
 };
