@@ -22,10 +22,6 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
   // Update local status when user prop changes
   useEffect(() => {
     if (user) {
-      console.log(
-        "User prop changed, updating twoFactorStatus:",
-        user.twoFactorEnabled
-      );
       setTwoFactorStatus(user.twoFactorEnabled || false);
     } else {
       // Reset status if user is null/undefined
