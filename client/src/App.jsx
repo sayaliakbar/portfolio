@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
@@ -15,6 +15,10 @@ import { initializeAuth } from "./utils/auth";
 
 function App() {
   const { isLoading } = useAuth0();
+  const location = useLocation();
+
+  // Check if current path is admin path (including login)
+  const isAdminPage = location.pathname.startsWith("/admin");
 
   // Initialize auth from localStorage on app start
   useEffect(() => {
@@ -35,7 +39,7 @@ function App() {
   return (
     <AdminProvider>
       <div className="flex flex-col min-h-screen">
-        <Navbar />
+        {!isAdminPage && <Navbar />}
         <main className="flex-grow">
           <Routes>
             {/* Public routes accessible to everyone */}
@@ -58,7 +62,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-        <Footer />
+        {!isAdminPage && <Footer />}
         <ScrollToTop />
       </div>
     </AdminProvider>
