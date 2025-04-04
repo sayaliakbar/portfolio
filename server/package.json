@@ -11,6 +11,9 @@
     "generate-jwt-secret": "node scripts/generateJwtSecret.js",
     "setup-backups": "node scripts/setupBackupCron.js",
     "cleanup-images": "node scripts/cleanupOrphanedImages.js",
+    "migrate-export": "node scripts/migrateToAtlas.js --export",
+    "migrate-import": "node scripts/migrateToAtlas.js --import",
+    "migrate-full": "node scripts/migrateToAtlas.js --full",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
