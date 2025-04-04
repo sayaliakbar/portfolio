@@ -3,21 +3,27 @@ const User = require("../models/User");
 
 // Standard auth middleware for protected routes
 module.exports = async function (req, res, next) {
+  console.log("Auth middleware running for:", req.method, req.originalUrl);
+
   // Get token from header
   const token = req.header("x-auth-token");
+  console.log("Token present:", !!token);
 
   // Check if not token
   if (!token) {
+    console.log("No token provided");
     return res.status(401).json({ message: "No token, authorization denied" });
   }
 
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Token verified successfully, user ID:", decoded.user.id);
 
     // Check token expiration (JWT verify handles this, but we're being explicit)
     const now = Math.floor(Date.now() / 1000);
     if (decoded.exp && decoded.exp < now) {
+      console.log("Token expired, current time:", now, "expiry:", decoded.exp);
       return res.status(401).json({ message: "Token has expired" });
     }
 
@@ -29,17 +35,23 @@ module.exports = async function (req, res, next) {
       "-password -refreshToken -twoFactorSecret -twoFactorBackupCodes"
     );
     if (!user) {
+      console.log("User not found in database:", req.user.id);
       return res.status(401).json({ message: "User not found" });
     }
+    console.log("User found:", user.username);
 
     // Add full user object to request
     req.userObj = user;
+    console.log("Auth middleware completed successfully");
 
     next();
   } catch (err) {
     console.error("Auth middleware error:", err.message);
     if (err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token has expired" });
+    }
+    if (err.name === "JsonWebTokenError") {
+      console.log("Invalid token provided:", token.substring(0, 10) + "...");
     }
     res.status(401).json({ message: "Token is not valid" });
   }
