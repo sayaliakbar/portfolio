@@ -3,7 +3,7 @@ const rateLimit = require("express-rate-limit");
 // Basic rate limiter for all API requests
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: {
@@ -28,7 +28,7 @@ const authLimiter = rateLimit({
 // Even stricter limiter for registration
 const registerLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 3, // limit each IP to 3 registration attempts per day
+  max: 5, // limit each IP to 3 registration attempts per day
   standardHeaders: true,
   legacyHeaders: false,
   message: {
