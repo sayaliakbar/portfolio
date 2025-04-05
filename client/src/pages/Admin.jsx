@@ -41,6 +41,23 @@ const Admin = () => {
 
   const activeTab = getActiveTab();
 
+  // Authentication wrapper for API calls
+  const authenticatedApiCall = async (apiFunction) => {
+    const authStatus = await checkAuthStatus();
+    if (!authStatus) {
+      setIsAuthenticated(false);
+      return null;
+    }
+
+    // Ensure we maintain authenticated state
+    if (!isAuthenticated) {
+      setIsAuthenticated(true);
+    }
+
+    // Execute the API function
+    return await apiFunction();
+  };
+
   useEffect(() => {
     // Check authentication on component mount
     const checkAuth = async () => {
@@ -62,8 +79,13 @@ const Admin = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await fetchProjects();
-      setProjects(data);
+      const data = await authenticatedApiCall(async () => {
+        return await fetchProjects();
+      });
+
+      if (data) {
+        setProjects(data);
+      }
     } catch (error) {
       console.error("Error loading projects:", error);
     } finally {
@@ -73,8 +95,13 @@ const Admin = () => {
 
   const loadUserData = async () => {
     try {
-      const response = await api.get("/auth");
-      setUserData(response.data);
+      const response = await authenticatedApiCall(async () => {
+        return await api.get("/auth");
+      });
+
+      if (response) {
+        setUserData(response.data);
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
     }
@@ -82,8 +109,13 @@ const Admin = () => {
 
   const loadUnreadMessageCount = async () => {
     try {
-      const count = await fetchUnreadMessageCount();
-      setUnreadMessageCount(count);
+      const count = await authenticatedApiCall(async () => {
+        return await fetchUnreadMessageCount();
+      });
+
+      if (count !== null) {
+        setUnreadMessageCount(count);
+      }
     } catch (error) {
       console.error("Error loading unread message count:", error);
     }
@@ -122,7 +154,9 @@ const Admin = () => {
     }
 
     try {
-      await deleteProject(projectId);
+      await authenticatedApiCall(async () => {
+        await deleteProject(projectId);
+      });
 
       // Refresh project list
       loadProjects();
@@ -131,19 +165,28 @@ const Admin = () => {
     }
   };
 
-  const handleFormSubmit = () => {
-    // Reset form state and reload projects
+  const handleFormSubmit = async () => {
+    // Reset form state
     setEditingProject(null);
     setIsAdding(false);
-    loadProjects();
+
+    // Reload projects with authentication check
+    await loadProjects();
   };
 
-  const handleTwoFactorSetupComplete = () => {
-    // Reload user data to get updated 2FA status
-    loadUserData();
+  const handleTwoFactorSetupComplete = async () => {
+    // Reload user data with authentication check
+    await loadUserData();
   };
 
-  const handleTabSwitch = (tab) => {
+  const handleTabSwitch = async (tab) => {
+    // Verify authentication first
+    const authStatus = await checkAuthStatus();
+    if (!authStatus) {
+      setIsAuthenticated(false);
+      return;
+    }
+
     // Navigate to the appropriate route
     navigate(`/admin/${tab === "dashboard" ? "" : tab}`);
 
@@ -155,11 +198,11 @@ const Admin = () => {
 
     // Reload data when switching tabs
     if (tab === "security") {
-      loadUserData();
+      await loadUserData();
     }
 
     // Always reload unread message count when switching tabs
-    loadUnreadMessageCount();
+    await loadUnreadMessageCount();
   };
 
   // Function to decrement unread count when a message is read
@@ -461,10 +504,10 @@ const Admin = () => {
                   </div>
                   <div className="pt-2">
                     <button
-                      onClick={handleLogout}
-                      className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
+                      onClick={() => handleTabSwitch("security")}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
                     >
-                      Logout
+                      Security Settings
                     </button>
                   </div>
                 </div>
@@ -629,7 +672,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Navigation Bar */}
-      <header className="bg-gradient-to-r from-indigo-700 to-indigo-900 shadow-lg z-10">
+      <header className="bg-gradient-to-r from-indigo-800 to-purple-900 shadow-lg z-10">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -652,11 +695,11 @@ const Admin = () => {
             <div className="flex items-center space-x-3">
               <a
                 href="/"
-                className="bg-white bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-2 rounded-md transition-all duration-200 flex items-center font-medium border border-white border-opacity-30 hover:border-opacity-50 shadow-sm hover:shadow"
+                className="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-md transition-all duration-200 flex items-center font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="h-5 w-5 mr-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -668,15 +711,15 @@ const Admin = () => {
                     d="M3 12l2-2m0 0l7-7 7 7m-7-7v14"
                   />
                 </svg>
-                Home
+                <span>Home</span>
               </a>
               <button
                 onClick={handleLogout}
-                className="bg-white bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-2 rounded-md transition-all duration-200 cursor-pointer flex items-center font-medium border border-white border-opacity-30 hover:border-opacity-50 shadow-sm hover:shadow"
+                className="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-md transition-all duration-200 cursor-pointer flex items-center font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="h-5 w-5 mr-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -688,7 +731,7 @@ const Admin = () => {
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                Logout
+                <span>Logout</span>
               </button>
             </div>
           </div>
@@ -936,10 +979,10 @@ const Admin = () => {
                         </div>
                         <div className="pt-2">
                           <button
-                            onClick={handleLogout}
-                            className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
+                            onClick={() => handleTabSwitch("security")}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer"
                           >
-                            Logout
+                            Security Settings
                           </button>
                         </div>
                       </div>
