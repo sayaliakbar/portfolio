@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   useNavigate,
   Routes,
@@ -27,8 +27,19 @@ const Admin = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [userData, setUserData] = useState(null);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [lastAuthCheck, setLastAuthCheck] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Store function references in refs to break dependency cycles
+  const authCheckRef = useRef(async () => {
+    // Default implementation before the real one is assigned
+    console.log("Initial auth check");
+    const authStatus = await checkAuthStatus();
+    setIsAuthenticated(authStatus);
+    setLastAuthCheck(Date.now());
+    return authStatus;
+  });
 
   // Determine active tab based on the current route
   const getActiveTab = () => {
@@ -41,92 +52,136 @@ const Admin = () => {
 
   const activeTab = getActiveTab();
 
-  // Authentication wrapper for API calls
-  const authenticatedApiCall = async (apiFunction) => {
-    const authStatus = await checkAuthStatus();
+  // Optimized authentication check function
+  const verifyAuth = useCallback(
+    async (forceCheck = false) => {
+      const now = Date.now();
+      // Only check every 10 seconds unless forced
+      if (forceCheck || now - lastAuthCheck > 10000) {
+        console.log("Performing auth check");
+        const authStatus = await checkAuthStatus();
+        setIsAuthenticated(authStatus);
+        setLastAuthCheck(now);
+        return authStatus;
+      } else {
+        // Use current auth state from function scope, not from state
+        // to avoid circular dependency
+        return isAuthenticated;
+      }
+    },
+    [lastAuthCheck] // Remove isAuthenticated from dependencies
+  );
+
+  // Store the current verifyAuth function in ref
+  useEffect(() => {
+    authCheckRef.current = verifyAuth;
+  }, [verifyAuth]);
+
+  // Authentication wrapper for API calls with reduced checks
+  const authenticatedApiCall = useCallback(async (apiFunction) => {
+    // Only verify auth if it hasn't been checked recently
+    const authStatus = await authCheckRef.current();
+
     if (!authStatus) {
       setIsAuthenticated(false);
       return null;
     }
 
-    // Ensure we maintain authenticated state
-    if (!isAuthenticated) {
-      setIsAuthenticated(true);
-    }
-
     // Execute the API function
     return await apiFunction();
-  };
-
-  useEffect(() => {
-    // Check authentication on component mount
-    const checkAuth = async () => {
-      const authStatus = await checkAuthStatus();
-      setIsAuthenticated(authStatus);
-
-      if (authStatus) {
-        loadProjects();
-        loadUserData();
-        loadUnreadMessageCount();
-      } else {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
   }, []);
 
-  const loadProjects = async () => {
+  // Load all data with a single auth check
+  const loadAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await authenticatedApiCall(async () => {
-        return await fetchProjects();
-      });
 
-      if (data) {
-        setProjects(data);
+      // Single auth check before multiple API calls
+      const authStatus = await authCheckRef.current(true);
+      if (!authStatus) {
+        setLoading(false);
+        return;
+      }
+
+      // Execute all API calls in parallel
+      const [projectsResponse, userDataResponse, messageCountResponse] =
+        await Promise.allSettled([
+          fetchProjects(),
+          api.get("/auth"),
+          fetchUnreadMessageCount(),
+        ]);
+
+      // Handle projects data
+      if (projectsResponse.status === "fulfilled") {
+        setProjects(projectsResponse.value);
+      } else {
+        console.error("Error loading projects:", projectsResponse.reason);
+      }
+
+      // Handle user data
+      if (userDataResponse.status === "fulfilled") {
+        const response = userDataResponse.value;
+        console.log("User data received:", response.data);
+
+        // Process 2FA status
+        processTwoFactorStatus(response.data);
+
+        // Set user data
+        setUserData(response.data);
+      } else {
+        console.error("Error loading user data:", userDataResponse.reason);
+      }
+
+      // Handle message count
+      if (messageCountResponse.status === "fulfilled") {
+        setUnreadMessageCount(messageCountResponse.value);
+      } else {
+        console.error(
+          "Error loading message count:",
+          messageCountResponse.reason
+        );
       }
     } catch (error) {
-      console.error("Error loading projects:", error);
+      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies to avoid re-creation
 
-  const loadUserData = async () => {
-    try {
-      const response = await authenticatedApiCall(async () => {
-        return await api.get("/auth");
-      });
+  // Helper function to process 2FA status
+  const processTwoFactorStatus = (userData) => {
+    if (!userData) return;
 
-      if (response) {
-        setUserData(response.data);
+    // Check if 2FA field exists in the response
+    if (Object.prototype.hasOwnProperty.call(userData, "twoFactorEnabled")) {
+      console.log("twoFactorEnabled field exists:", userData.twoFactorEnabled);
+    } else {
+      console.warn("twoFactorEnabled field missing from response!");
+
+      // Use localStorage as fallback
+      const storedStatus = localStorage.getItem("twoFactorEnabled");
+      if (storedStatus) {
+        console.log("Using stored 2FA status:", storedStatus);
+        userData.twoFactorEnabled = storedStatus === "true";
       }
-    } catch (error) {
-      console.error("Error loading user data:", error);
+    }
+
+    // Save current status to localStorage for future reference
+    if (userData.twoFactorEnabled !== undefined) {
+      localStorage.setItem("twoFactorEnabled", userData.twoFactorEnabled);
     }
   };
 
-  const loadUnreadMessageCount = async () => {
-    try {
-      const count = await authenticatedApiCall(async () => {
-        return await fetchUnreadMessageCount();
-      });
-
-      if (count !== null) {
-        setUnreadMessageCount(count);
-      }
-    } catch (error) {
-      console.error("Error loading unread message count:", error);
-    }
-  };
+  useEffect(() => {
+    // Initial data load on mount
+    loadAllData();
+    // Don't include loadAllData in the dependency array since it would cause a re-render loop
+  }, []);
 
   const handleLogin = (success) => {
     if (success) {
       setIsAuthenticated(true);
-      loadProjects();
-      loadUserData();
-      loadUnreadMessageCount();
+      loadAllData();
     }
   };
 
@@ -159,7 +214,7 @@ const Admin = () => {
       });
 
       // Refresh project list
-      loadProjects();
+      loadAllData();
     } catch (error) {
       console.error("Error deleting project:", error);
     }
@@ -171,17 +226,17 @@ const Admin = () => {
     setIsAdding(false);
 
     // Reload projects with authentication check
-    await loadProjects();
+    await loadAllData();
   };
 
   const handleTwoFactorSetupComplete = async () => {
     // Reload user data with authentication check
-    await loadUserData();
+    await loadAllData();
   };
 
   const handleTabSwitch = async (tab) => {
     // Verify authentication first
-    const authStatus = await checkAuthStatus();
+    const authStatus = await verifyAuth();
     if (!authStatus) {
       setIsAuthenticated(false);
       return;
@@ -198,11 +253,11 @@ const Admin = () => {
 
     // Reload data when switching tabs
     if (tab === "security") {
-      await loadUserData();
+      await loadAllData();
     }
 
     // Always reload unread message count when switching tabs
-    await loadUnreadMessageCount();
+    await loadAllData();
   };
 
   // Function to decrement unread count when a message is read
@@ -523,21 +578,6 @@ const Admin = () => {
             transition={{ duration: 0.3 }}
           >
             <div className="bg-white rounded-lg shadow-md">
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-semibold">Projects</h2>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Manage your portfolio projects
-                  </p>
-                </div>
-                <button
-                  onClick={handleAddProject}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                >
-                  Add Project
-                </button>
-              </div>
-
               {loading ? (
                 <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
@@ -635,6 +675,72 @@ const Admin = () => {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Security Settings</h2>
 
+              {/* 2FA Status Banner */}
+              <div
+                className={`mb-6 p-4 rounded-lg flex items-center ${
+                  userData?.twoFactorEnabled ? "bg-green-100" : "bg-yellow-100"
+                }`}
+              >
+                <div
+                  className={`p-3 rounded-full mr-4 ${
+                    userData?.twoFactorEnabled
+                      ? "bg-green-200"
+                      : "bg-yellow-200"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-6 w-6 ${
+                      userData?.twoFactorEnabled
+                        ? "text-green-700"
+                        : "text-yellow-700"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    {userData?.twoFactorEnabled ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    )}
+                  </svg>
+                </div>
+                <div>
+                  <h3
+                    className={`font-semibold ${
+                      userData?.twoFactorEnabled
+                        ? "text-green-800"
+                        : "text-yellow-800"
+                    }`}
+                  >
+                    Two-Factor Authentication is{" "}
+                    {userData?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      userData?.twoFactorEnabled
+                        ? "text-green-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
+                    {userData?.twoFactorEnabled
+                      ? "Your account is protected with an additional layer of security."
+                      : "Enhance your account security by enabling two-factor authentication below."}
+                  </p>
+                </div>
+              </div>
+
               <div className="border-t border-gray-200 pt-6 mt-6">
                 <h3 className="text-lg font-medium mb-4">
                   Two-Factor Authentication (2FA)
@@ -647,7 +753,7 @@ const Admin = () => {
                 </p>
 
                 <TwoFactorSetup
-                  enabled={userData?.twoFactorEnabled || false}
+                  user={userData}
                   onSetupComplete={handleTwoFactorSetupComplete}
                 />
               </div>
@@ -861,8 +967,6 @@ const Admin = () => {
               onCancel={() => {
                 setIsAdding(false);
                 setEditingProject(null);
-                // Navigate back to projects
-                navigate("/admin/projects");
               }}
             />
           </Motion.div>
@@ -880,7 +984,6 @@ const Admin = () => {
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-                      {/* Dashboard content */}
                       <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">
                           Recent Projects
@@ -1050,6 +1153,74 @@ const Admin = () => {
                       Security Settings
                     </h2>
 
+                    {/* 2FA Status Banner */}
+                    <div
+                      className={`mb-6 p-4 rounded-lg flex items-center ${
+                        userData?.twoFactorEnabled
+                          ? "bg-green-100"
+                          : "bg-yellow-100"
+                      }`}
+                    >
+                      <div
+                        className={`p-3 rounded-full mr-4 ${
+                          userData?.twoFactorEnabled
+                            ? "bg-green-200"
+                            : "bg-yellow-200"
+                        }`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className={`h-6 w-6 ${
+                            userData?.twoFactorEnabled
+                              ? "text-green-700"
+                              : "text-yellow-700"
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          {userData?.twoFactorEnabled ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            />
+                          )}
+                        </svg>
+                      </div>
+                      <div>
+                        <h3
+                          className={`font-semibold ${
+                            userData?.twoFactorEnabled
+                              ? "text-green-800"
+                              : "text-yellow-800"
+                          }`}
+                        >
+                          Two-Factor Authentication is{" "}
+                          {userData?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                        </h3>
+                        <p
+                          className={`text-sm ${
+                            userData?.twoFactorEnabled
+                              ? "text-green-600"
+                              : "text-yellow-600"
+                          }`}
+                        >
+                          {userData?.twoFactorEnabled
+                            ? "Your account is protected with an additional layer of security."
+                            : "Enhance your account security by enabling two-factor authentication below."}
+                        </p>
+                      </div>
+                    </div>
+
                     <div className="border-t border-gray-200 pt-6 mt-6">
                       <h3 className="text-lg font-medium mb-4">
                         Two-Factor Authentication (2FA)
@@ -1062,7 +1233,7 @@ const Admin = () => {
                       </p>
 
                       <TwoFactorSetup
-                        enabled={userData?.twoFactorEnabled || false}
+                        user={userData}
                         onSetupComplete={handleTwoFactorSetupComplete}
                       />
                     </div>
