@@ -1,6 +1,11 @@
 import api from "./api";
 import { jwtDecode } from "jwt-decode";
 
+// Add these variables at the top of the file, after imports
+let lastAuthCheckTime = 0;
+let lastAuthCheckResult = null;
+const AUTH_CHECK_CACHE_DURATION = 10000; // 10 seconds
+
 // Set auth token in localStorage and axios headers
 export const setAuthToken = (token) => {
   if (token) {
@@ -35,42 +40,63 @@ export const getTempToken = () => {
   return sessionStorage.getItem("tempToken");
 };
 
-// Check if token is valid and not expired
-export const isAuthenticated = async () => {
+// Optimized function to check authentication with caching
+export const getAuthStatus = async (forceCheck = false) => {
+  const now = Date.now();
+
+  // Return cached result if not expired and not forced to check
+  if (
+    !forceCheck &&
+    lastAuthCheckResult !== null &&
+    now - lastAuthCheckTime < AUTH_CHECK_CACHE_DURATION
+  ) {
+    console.log("Using cached auth status:", lastAuthCheckResult);
+    return lastAuthCheckResult;
+  }
+
+  // Perform new authentication check
   try {
+    // First, check if token exists and is valid without API call
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      // Try to refresh the token
+      console.log("No token found, attempting refresh");
       const refreshed = await refreshAuthToken();
+      lastAuthCheckTime = Date.now();
+      lastAuthCheckResult = refreshed;
       return refreshed;
     }
 
-    // Check if token is expired
-    const decoded = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
+    // Check if token is expired without API call
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
 
-    if (decoded.exp < currentTime) {
-      console.log("Token expired, attempting to refresh");
-      // Token is expired, try to refresh it
+      if (decoded.exp < currentTime) {
+        console.log("Token expired, attempting refresh");
+        const refreshed = await refreshAuthToken();
+        lastAuthCheckTime = Date.now();
+        lastAuthCheckResult = refreshed;
+        return refreshed;
+      }
+
+      // Token is valid, set in headers and return true
+      api.defaults.headers.common["x-auth-token"] = token;
+      lastAuthCheckTime = Date.now();
+      lastAuthCheckResult = true;
+      return true;
+    } catch (decodeError) {
+      console.error("Token decode error:", decodeError);
+
+      // Try to refresh on decode error
       const refreshed = await refreshAuthToken();
+      lastAuthCheckTime = Date.now();
+      lastAuthCheckResult = refreshed;
       return refreshed;
     }
-
-    // Set the token in headers
-    api.defaults.headers.common["x-auth-token"] = token;
-    return true;
   } catch (error) {
-    console.error("Auth verification error:", error);
-
-    // If the error is due to an expired token, try to refresh it
-    if (error.response && error.response.status === 401) {
-      const refreshed = await refreshAuthToken();
-      return refreshed;
-    }
-
-    // Clear invalid token
-    setAuthToken(null);
-    setRefreshToken(null);
+    console.error("Auth check error:", error);
+    lastAuthCheckTime = Date.now();
+    lastAuthCheckResult = false;
     return false;
   }
 };
@@ -259,6 +285,10 @@ export const registerAdmin = async (credentials) => {
 
 // Debug function to check authentication status
 export const checkAuthStatus = async () => {
+  // Use cached auth check by default
+  return await getAuthStatus();
+
+  /* Original implementation with API call:
   try {
     const response = await api.get("/auth/check-auth");
     console.log("Auth status:", response.data);
@@ -267,4 +297,10 @@ export const checkAuthStatus = async () => {
     console.error("Auth check error:", error);
     return false;
   }
+  */
+};
+
+// Check if token is valid and not expired (uses cached auth status)
+export const isAuthenticated = async (forceCheck = false) => {
+  return await getAuthStatus(forceCheck);
 };
