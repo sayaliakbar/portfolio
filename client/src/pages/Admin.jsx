@@ -28,6 +28,8 @@ const Admin = () => {
   const [userData, setUserData] = useState(null);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [lastAuthCheck, setLastAuthCheck] = useState(0);
+  const [resumeUrl, setResumeUrl] = useState("");
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,6 +49,7 @@ const Admin = () => {
     if (path.includes("/projects")) return "projects";
     if (path.includes("/messages")) return "messages";
     if (path.includes("/security")) return "security";
+    if (path.includes("/resume")) return "resume";
     return "dashboard";
   };
 
@@ -91,7 +94,39 @@ const Admin = () => {
     return await apiFunction();
   }, []);
 
-  // Load all data with a single auth check
+  // Function to handle resume upload
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+
+      // Create FormData object
+      const formData = new FormData();
+      formData.append("resume", file);
+
+      // Upload the file
+      const response = await api.post("/resume/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Update the resume URL from the response
+      setResumeUrl(response.data.fileUrl);
+
+      // Show success message
+      alert("Resume uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      alert("Failed to upload resume. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update loadAllData to also load resume data
   const loadAllData = useCallback(async () => {
     try {
       setLoading(true);
@@ -104,12 +139,17 @@ const Admin = () => {
       }
 
       // Execute all API calls in parallel
-      const [projectsResponse, userDataResponse, messageCountResponse] =
-        await Promise.allSettled([
-          fetchProjects(),
-          api.get("/auth"),
-          fetchUnreadMessageCount(),
-        ]);
+      const [
+        projectsResponse,
+        userDataResponse,
+        messageCountResponse,
+        resumeResponse,
+      ] = await Promise.allSettled([
+        fetchProjects(),
+        api.get("/auth"),
+        fetchUnreadMessageCount(),
+        api.get("/resume"),
+      ]);
 
       // Handle projects data
       if (projectsResponse.status === "fulfilled") {
@@ -140,6 +180,16 @@ const Admin = () => {
           "Error loading message count:",
           messageCountResponse.reason
         );
+      }
+
+      // Handle resume data
+      if (resumeResponse.status === "fulfilled") {
+        const response = resumeResponse.value;
+        if (response.data && response.data.fileUrl) {
+          setResumeUrl(response.data.fileUrl);
+        }
+      } else {
+        console.error("Error loading resume data:", resumeResponse.reason);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -550,6 +600,37 @@ const Admin = () => {
                     </p>
                   </div>
                   <div>
+                    <p className="text-sm text-gray-500">Resume</p>
+                    <p className="font-medium">
+                      {resumeUrl ? (
+                        <a
+                          href={resumeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 transition-colors flex items-center"
+                        >
+                          <span>Available</span>
+                          <svg
+                            className="w-4 h-4 ml-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                        </a>
+                      ) : (
+                        <span className="text-gray-500">Not uploaded</span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
                     <p className="text-sm text-gray-500">Last Login</p>
                     <p className="font-medium">
                       {userData?.lastLogin
@@ -770,6 +851,230 @@ const Admin = () => {
             <MessagesManager onMessageRead={decrementUnreadCount} />
           </Motion.div>
         );
+      case "resume":
+        return (
+          <Motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Resume Management</h2>
+                {resumeUrl && (
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer flex items-center"
+                  >
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    Download Resume
+                  </a>
+                )}
+              </div>
+
+              <div className="border-b border-gray-200 pb-6 mb-6">
+                <p className="text-gray-600 mb-4">
+                  Upload your resume to make it available for download on your
+                  portfolio website. Visitors will be able to download your
+                  resume from the page you specify.
+                </p>
+
+                {resumeUrl ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                    <div className="flex items-start">
+                      <div className="bg-blue-100 p-2 rounded-md mr-4">
+                        <svg
+                          className="w-6 h-6 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-grow">
+                        <h3 className="font-medium text-blue-800">
+                          Resume Uploaded
+                        </h3>
+                        <p className="text-sm text-blue-600 mt-1">
+                          Your resume is available for download.
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <a
+                            href={resumeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition-colors text-sm cursor-pointer flex items-center"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            View
+                          </a>
+                          <button
+                            onClick={async () => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to delete your resume?"
+                                )
+                              ) {
+                                try {
+                                  await api.delete("/resume");
+                                  setResumeUrl("");
+                                  alert("Resume deleted successfully!");
+                                } catch (error) {
+                                  console.error(
+                                    "Error deleting resume:",
+                                    error
+                                  );
+                                  alert(
+                                    "Failed to delete resume. Please try again."
+                                  );
+                                }
+                              }
+                            }}
+                            className="bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition-colors text-sm cursor-pointer flex items-center"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                    <div className="flex items-start">
+                      <div className="bg-yellow-100 p-2 rounded-md mr-4">
+                        <svg
+                          className="w-6 h-6 text-yellow-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-yellow-800">
+                          No Resume Uploaded
+                        </h3>
+                        <p className="text-sm text-yellow-600 mt-1">
+                          You haven't uploaded a resume yet. Upload one below to
+                          make it available for download.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Upload Resume</h3>
+                <p className="text-gray-600 text-sm">
+                  Supported formats: PDF, DOC, DOCX. Maximum size: 5MB.
+                </p>
+
+                <div className="mt-4 border-2 border-dashed border-gray-300 rounded-md px-6 py-8">
+                  <div className="space-y-4 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <label
+                        htmlFor="resume-upload"
+                        className="relative cursor-pointer bg-indigo-600 py-2 px-4 rounded-md font-medium text-white hover:bg-indigo-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                      >
+                        <span>Upload a file</span>
+                        <input
+                          id="resume-upload"
+                          name="resume-upload"
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleResumeUpload}
+                          className="sr-only"
+                          accept=".pdf,.doc,.docx"
+                        />
+                      </label>
+                      <p className="pl-1 pt-2">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      PDF, DOC, DOCX up to 5MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Motion.div>
+        );
       default:
         return null;
     }
@@ -949,6 +1254,30 @@ const Admin = () => {
               </svg>
               Security
             </button>
+            <button
+              onClick={() => handleTabSwitch("resume")}
+              className={`px-5 py-4 font-medium text-sm transition-all duration-200 cursor-pointer whitespace-nowrap flex items-center ${
+                activeTab === "resume"
+                  ? "text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50"
+                  : "text-gray-500 hover:text-indigo-600 hover:bg-gray-50"
+              }`}
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Resume
+            </button>
           </div>
         </div>
       </nav>
@@ -1069,6 +1398,39 @@ const Admin = () => {
                               <span className="text-green-600">Enabled</span>
                             ) : (
                               <span className="text-amber-600">Disabled</span>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Resume</p>
+                          <p className="font-medium">
+                            {resumeUrl ? (
+                              <a
+                                href={resumeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 transition-colors flex items-center"
+                              >
+                                <span>Available</span>
+                                <svg
+                                  className="w-4 h-4 ml-1"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                  />
+                                </svg>
+                              </a>
+                            ) : (
+                              <span className="text-gray-500">
+                                Not uploaded
+                              </span>
                             )}
                           </p>
                         </div>
@@ -1236,6 +1598,57 @@ const Admin = () => {
                         user={userData}
                         onSetupComplete={handleTwoFactorSetupComplete}
                       />
+                    </div>
+                  </div>
+                </Motion.div>
+              }
+            />
+
+            <Route
+              path="/resume"
+              element={
+                <Motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-xl font-semibold mb-4">Resume</h2>
+                    <p className="text-gray-600 mb-4">
+                      Upload or view your resume.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="resume"
+                          className="text-sm text-gray-500"
+                        >
+                          Resume File
+                        </label>
+                        <input
+                          type="file"
+                          id="resume"
+                          ref={fileInputRef}
+                          onChange={handleResumeUpload}
+                          className="mt-2 border border-gray-300 rounded-md p-2"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="resumeUrl"
+                          className="text-sm text-gray-500"
+                        >
+                          Resume URL
+                        </label>
+                        <input
+                          type="text"
+                          id="resumeUrl"
+                          value={resumeUrl}
+                          readOnly
+                          className="mt-2 border border-gray-300 rounded-md p-2"
+                        />
+                      </div>
                     </div>
                   </div>
                 </Motion.div>
