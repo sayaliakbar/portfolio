@@ -19,14 +19,44 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
     user?.twoFactorEnabled || false
   );
 
+  // Check localStorage for 2FA status on component initialization
+  useEffect(() => {
+    try {
+      const storedStatus = localStorage.getItem("twoFactorEnabled");
+      if (storedStatus !== null) {
+        const parsedStatus = storedStatus === "true";
+        console.log(
+          "TwoFactorSetup: Initial check - localStorage has 2FA status:",
+          parsedStatus
+        );
+
+        // Only use localStorage if user prop doesn't have twoFactorEnabled defined
+        if (user === null || user?.twoFactorEnabled === undefined) {
+          console.log(
+            "TwoFactorSetup: Using localStorage for initial 2FA status"
+          );
+          setTwoFactorStatus(parsedStatus);
+        }
+      }
+    } catch (err) {
+      console.error("Error reading 2FA status from localStorage:", err);
+    }
+  }, []);
+
   // Update local status when user prop changes
   useEffect(() => {
     if (user) {
-      setTwoFactorStatus(user.twoFactorEnabled || false);
+      const status = user.twoFactorEnabled || false;
+      setTwoFactorStatus(status);
+      // Store the 2FA status in localStorage for persistence
+      localStorage.setItem("twoFactorEnabled", JSON.stringify(status));
+      console.log("TwoFactorSetup: Synced 2FA status to localStorage:", status);
     } else {
       // Reset status if user is null/undefined
       console.log("User is null/undefined, resetting twoFactorStatus");
       setTwoFactorStatus(false);
+      // Clear the localStorage when user is reset
+      localStorage.setItem("twoFactorEnabled", "false");
     }
   }, [user]);
 
@@ -102,6 +132,13 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
         }
         // Update local status state immediately
         setTwoFactorStatus(true);
+        // Update localStorage with stronger persistence
+        try {
+          localStorage.setItem("twoFactorEnabled", "true");
+          console.log("2FA enabled - updated localStorage");
+        } catch (storageErr) {
+          console.error("Failed to update localStorage:", storageErr);
+        }
         setSuccess("Two-factor authentication enabled successfully!");
         setShowBackupCodes(true);
         if (onSetupComplete) {
@@ -140,6 +177,13 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
         }
         // Update local status state immediately
         setTwoFactorStatus(false);
+        // Update localStorage with stronger persistence
+        try {
+          localStorage.setItem("twoFactorEnabled", "false");
+          console.log("2FA disabled - updated localStorage");
+        } catch (storageErr) {
+          console.error("Failed to update localStorage:", storageErr);
+        }
         setSuccess("Two-factor authentication disabled successfully!");
         setIsDisabling(false);
         if (onSetupComplete) {
@@ -191,6 +235,10 @@ const TwoFactorSetup = ({ user, onSetupComplete }) => {
               }
             >
               {twoFactorStatus ? "Enabled" : "Disabled"}
+            </span>
+            <span className="text-xs text-gray-400 ml-2">
+              (LocalStorage:{" "}
+              {localStorage.getItem("twoFactorEnabled") || "not set"})
             </span>
           </p>
           <p className="text-sm text-gray-500">
