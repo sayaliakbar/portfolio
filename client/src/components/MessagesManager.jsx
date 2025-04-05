@@ -1,68 +1,141 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion as Motion } from "framer-motion";
-import { fetchMessages, markMessageAsRead, deleteMessage } from "../utils/api";
-import { checkAuthStatus } from "../utils/auth";
+import { getAuthStatus } from "../utils/auth";
+import api from "../utils/api";
+
+// Cache for messages data
+let messagesCache = {
+  data: null,
+  timestamp: 0,
+};
+const CACHE_DURATION = 30000; // 30 seconds
 
 const MessagesManager = ({ onMessageRead }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [authError, setAuthError] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState(false);
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        // Check auth status first
-        const isAuthenticated = await checkAuthStatus();
-        console.log("Authentication status:", isAuthenticated);
+  // Optimized initialization function with caching
+  const initializeComponent = useCallback(async () => {
+    setAuthError(false);
+    setLoading(true);
 
-        if (isAuthenticated) {
-          loadMessages();
-        } else {
-          setAuthError(true);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error during initialization:", error);
+    try {
+      // Use the optimized auth check function
+      const isAuth = await getAuthStatus();
+      console.log("Authentication status:", isAuth);
+
+      if (isAuth) {
+        await loadMessages();
+      } else {
+        console.error("Auth check returned false");
         setAuthError(true);
         setLoading(false);
       }
-    };
-
-    init();
-  }, []);
-
-  const loadMessages = async () => {
-    try {
-      setLoading(true);
-      const response = await fetchMessages();
-      setMessages(response.data || []);
     } catch (error) {
-      console.error("Error loading messages:", error);
-      alert("Failed to load messages. Please try again later.");
-    } finally {
+      console.error("Error during initialization:", error);
+      if (error.response && error.response.status === 429) {
+        setAuthError(true);
+        setRateLimitError(true);
+      } else {
+        setAuthError(true);
+      }
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Load messages with caching
+  const loadMessages = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+
+      // Check if we can use cached data
+      const now = Date.now();
+      if (
+        !forceRefresh &&
+        messagesCache.data &&
+        now - messagesCache.timestamp < CACHE_DURATION
+      ) {
+        console.log("Using cached messages data");
+        setMessages(messagesCache.data);
+        setLoading(false);
+        return;
+      }
+
+      // Get fresh data
+      const response = await api.get("/messages");
+
+      if (!response.data || !response.data.data) {
+        console.error("Invalid response format:", response);
+        throw new Error("Unexpected API response format");
+      }
+
+      // Update cache and state
+      const messageData = response.data.data || [];
+      messagesCache = {
+        data: messageData,
+        timestamp: now,
+      };
+
+      setMessages(messageData);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+
+      if (error.response) {
+        // Handle specific HTTP error codes
+        if (error.response.status === 429) {
+          setRateLimitError(true);
+          setAuthError(true);
+        } else if (error.response.status === 401) {
+          setAuthError(true);
+        } else {
+          alert(
+            `Failed to load messages: ${error.response.status} ${error.response.statusText}`
+          );
+        }
+      } else if (error.request) {
+        // Request was made but no response received (network error)
+        alert("Network error. Please check your connection and try again.");
+      } else {
+        // Other errors
+        alert("Failed to load messages. Please try again later.");
+      }
+
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    initializeComponent();
+
+    // Set up periodic refresh if component stays mounted for a long time
+    const refreshInterval = setInterval(() => {
+      // Only refresh if the component is actively being viewed (not in error state)
+      if (!authError && !rateLimitError) {
+        loadMessages(true);
+      }
+    }, 60000); // Refresh every minute
+
+    return () => clearInterval(refreshInterval);
+  }, [initializeComponent, loadMessages, authError, rateLimitError]);
 
   const handleMessageClick = async (message) => {
     console.log("Message clicked:", message);
-    console.log("Current isRead status:", message.isRead);
     setSelectedMessage(message);
 
     // Mark as read if it's unread
     if (!message.isRead) {
       try {
         console.log(`Marking message ${message._id} as read...`);
-        const response = await markMessageAsRead(message._id);
-        console.log(`Mark as read response:`, response);
 
-        // Update local state even if the API fails
-        setMessages(
-          messages.map((m) =>
-            m._id === message._id ? { ...m, isRead: true } : m
-          )
+        // Update UI immediately for better user experience
+        const updatedMessages = messages.map((m) =>
+          m._id === message._id ? { ...m, isRead: true } : m
         );
+        setMessages(updatedMessages);
 
         // Also update the selected message
         setSelectedMessage((prev) => ({
@@ -70,34 +143,22 @@ const MessagesManager = ({ onMessageRead }) => {
           isRead: true,
         }));
 
+        // Update cache to maintain consistency
+        if (messagesCache.data) {
+          messagesCache.data = updatedMessages;
+        }
+
         // Call the onMessageRead prop to update the unread count in parent component
         onMessageRead();
+
+        // Make API call in the background
+        await api.post(`/messages/${message._id}/read`, {});
       } catch (error) {
         console.error("Error marking message as read:", error);
 
-        // Still update UI state even if API fails to avoid a poor user experience
-        setMessages(
-          messages.map((m) =>
-            m._id === message._id ? { ...m, isRead: true } : m
-          )
-        );
-
-        setSelectedMessage((prev) => ({
-          ...prev,
-          isRead: true,
-        }));
-
-        // Still call onMessageRead even if the API fails but we're updating the UI
-        onMessageRead();
-
-        // Only show alert in development mode
-        if (import.meta.env.DEV) {
-          alert(
-            `Error marking message as read: ${
-              error.message ||
-              "Network error. The update will be shown in the UI but may not be saved to the database."
-            }`
-          );
+        // Already updated UI optimistically, so we just log the error
+        if (error.response && error.response.status === 429) {
+          console.warn("Rate limit hit when marking message as read");
         }
       }
     }
@@ -109,15 +170,42 @@ const MessagesManager = ({ onMessageRead }) => {
     }
 
     try {
-      await deleteMessage(id);
-      // Remove message from state
-      setMessages(messages.filter((m) => m._id !== id));
+      // Update UI immediately for better user experience
+      const updatedMessages = messages.filter((m) => m._id !== id);
+      setMessages(updatedMessages);
+
+      // Update cache to maintain consistency
+      if (messagesCache.data) {
+        messagesCache.data = updatedMessages;
+      }
+
       // Clear selected message if it was the one deleted
       if (selectedMessage && selectedMessage._id === id) {
         setSelectedMessage(null);
       }
+
+      // Make API call in the background
+      await api.delete(`/messages/${id}`);
     } catch (error) {
-      console.error("Error deleting message:", error);
+      console.error(`Error deleting message ${id}:`, error);
+
+      // On error, restore original messages from a fresh API call
+      loadMessages(true);
+
+      // Show error message
+      if (error.response) {
+        if (error.response.status === 429) {
+          alert("Rate limit exceeded. Please try again later.");
+        } else if (error.response.status === 401) {
+          setAuthError(true);
+        } else {
+          alert(
+            `Failed to delete message: ${error.response.status} ${error.response.statusText}`
+          );
+        }
+      } else {
+        alert("Failed to delete the message. Please try again.");
+      }
     }
   };
 
@@ -144,24 +232,50 @@ const MessagesManager = ({ onMessageRead }) => {
   }
 
   if (authError) {
+    // Create a single error object with all relevant info
+    const errorInfo = {
+      title: rateLimitError ? "Rate Limit Exceeded" : "Authentication Error",
+      message: rateLimitError
+        ? "You've made too many requests in a short period. Please wait before trying again."
+        : "Unable to verify your authentication. This may happen if your session has expired.",
+      hint: rateLimitError
+        ? "This is a temporary restriction to prevent server overload."
+        : "If this persists, try logging out and back in.",
+      retryDelay: rateLimitError ? 5000 : 1000, // 5 seconds for rate limit, 1 second otherwise
+    };
+
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
-            <p>
-              <strong>Authentication Error</strong>
-            </p>
-            <p>
-              Unable to verify your authentication. Please try logging out and
-              back in.
-            </p>
+          <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4 max-w-md">
+            <p className="font-bold text-lg mb-2">{errorInfo.title}</p>
+            <p className="mb-3">{errorInfo.message}</p>
+            <p className="text-sm">{errorInfo.hint}</p>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors cursor-pointer"
-          >
-            Retry
-          </button>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => {
+                // Reset error states
+                setAuthError(false);
+                setRateLimitError(false);
+                // Set loading to true
+                setLoading(true);
+                // Re-initialize with appropriate delay
+                setTimeout(() => {
+                  initializeComponent();
+                }, errorInfo.retryDelay);
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors cursor-pointer"
+            >
+              {rateLimitError ? "Retry After Delay" : "Retry"}
+            </button>
+            <a
+              href="/admin"
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+            >
+              Go to Dashboard
+            </a>
+          </div>
         </div>
       </div>
     );
