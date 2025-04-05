@@ -24,6 +24,15 @@ const UserSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  // Resume fields
+  resumeFile: {
+    type: String,
+    default: null,
+  },
+  resumeUrl: {
+    type: String,
+    default: null,
+  },
   // Refresh token fields
   refreshToken: {
     type: String,
