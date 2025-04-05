@@ -21,6 +21,7 @@ const authRoutes = require("./routes/auth");
 const auth0Routes = require("./routes/auth0");
 const cloudflareRoutes = require("./routes/cloudflareAccess");
 const uploadRoutes = require("./routes/uploads");
+const resumeRoutes = require("./routes/resume");
 
 // Config
 dotenv.config();
@@ -92,6 +93,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth0", auth0Routes);
 app.use("/api/cloudflare", cloudflareRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/resume", resumeRoutes);
 
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
