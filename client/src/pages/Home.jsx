@@ -8,6 +8,7 @@ import ProjectCard from "../components/ProjectCard";
 import SkillCard from "../components/SkillCard";
 import ContactForm from "../components/ContactForm";
 import Button from "../components/Button";
+import ResumeButton from "../components/ResumeButton";
 import { fetchFeaturedProjects } from "../utils/api";
 import heroImage from "../assets/hero.png";
 
@@ -241,13 +242,7 @@ const HomePage = () => {
               exceptional user experiences.
             </p>
             <div className="mt-6">
-              <Button
-                href="/resume.pdf"
-                variant="outline"
-                className="flex items-center"
-              >
-                Download Resume
-              </Button>
+              <ResumeButton />
             </div>
           </Motion.div>
 
