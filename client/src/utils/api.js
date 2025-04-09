@@ -1,5 +1,6 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { refreshToken, logout } from "./auth";
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -10,7 +11,7 @@ const api = axios.create({
 });
 
 // Initialize with token from localStorage if available
-const token = localStorage.getItem("auth_token");
+const token = localStorage.getItem("authToken");
 if (token) {
   api.defaults.headers.common["x-auth-token"] = token;
   console.log("Initialized API with token from localStorage");
@@ -30,30 +31,82 @@ const isTokenExpired = (token) => {
   }
 };
 
+// Track if we're currently refreshing the token to prevent multiple refresh attempts
+let isRefreshing = false;
+// Store pending requests that should be retried after token refresh
+let failedQueue = [];
+
+// Process the queue of failed requests
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
 // Request interceptor - Add auth token and check expiration
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // Get token from localStorage
-    const token = localStorage.getItem("auth_token");
+    let token = localStorage.getItem("authToken");
     console.log("API Request to:", config.url);
     console.log("Token exists:", !!token);
 
     // If token exists, check if it's expired
     if (token) {
-      if (isTokenExpired(token)) {
-        // Token is expired - clear localStorage and redirect to login
-        console.log("Token expired, redirecting to login");
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("refresh_token");
+      if (isTokenExpired(token) && !config.url.includes("/auth/refresh")) {
+        console.log("Token expired, attempting to refresh");
 
-        // If not on login page already, redirect
-        if (!window.location.pathname.includes("/admin/login")) {
-          window.location.href = "/admin/login";
+        if (!isRefreshing) {
+          isRefreshing = true;
+
+          try {
+            // Attempt to refresh the token
+            const result = await refreshToken();
+
+            if (result.success) {
+              token = result.token;
+              console.log("Token refreshed successfully");
+              processQueue(null, token);
+            } else {
+              console.log("Token refresh failed:", result.message);
+              processQueue(new Error("Token refresh failed"));
+              // Logout and redirect
+              await logout();
+              window.location.href = "/admin/login";
+              return Promise.reject("Token refresh failed");
+            }
+          } catch (error) {
+            console.error("Error during token refresh:", error);
+            processQueue(error);
+            // Logout and redirect
+            await logout();
+            window.location.href = "/admin/login";
+            return Promise.reject("Token refresh error");
+          } finally {
+            isRefreshing = false;
+          }
+        } else {
+          // If we're already refreshing, add this request to the queue
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((newToken) => {
+              config.headers["x-auth-token"] = newToken;
+              return config;
+            })
+            .catch((error) => {
+              return Promise.reject(error);
+            });
         }
-        return Promise.reject("Token expired");
       }
 
-      // Token is valid, add to headers
+      // Token is valid (or just refreshed), add to headers
       config.headers["x-auth-token"] = token;
       console.log("Added token to request headers");
     }
@@ -68,18 +121,70 @@ api.interceptors.request.use(
 // Response interceptor - Handle 401 Unauthorized errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error?.response?.status === 401) {
-      // Clear tokens on authentication error
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("refresh_token");
+  async (error) => {
+    const originalRequest = error.config;
 
-      // Redirect to login if not already there
-      if (!window.location.pathname.includes("/admin/login")) {
-        console.log("Unauthorized, redirecting to login");
-        window.location.href = "/admin/login";
+    // Skip auth-related endpoints from automatic handling
+    const isAuthEndpoint =
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/register");
+
+    // If 401 error and not an auth endpoint or refresh token request
+    if (
+      error?.response?.status === 401 &&
+      !isAuthEndpoint &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/auth/refresh")
+    ) {
+      originalRequest._retry = true;
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        try {
+          // Try to refresh the token
+          const result = await refreshToken();
+
+          if (result.success) {
+            // Update the authorization header
+            axios.defaults.headers.common["x-auth-token"] = result.token;
+            originalRequest.headers["x-auth-token"] = result.token;
+
+            // Process any queued requests
+            processQueue(null, result.token);
+
+            // Retry the original request
+            return api(originalRequest);
+          } else {
+            processQueue(new Error("Refresh token failed"));
+            await logout();
+            window.location.href = "/admin/login";
+            return Promise.reject(error);
+          }
+        } catch (refreshError) {
+          processQueue(refreshError);
+          await logout();
+          window.location.href = "/admin/login";
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        // If we're already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token) => {
+              originalRequest.headers["x-auth-token"] = token;
+              resolve(api(originalRequest));
+            },
+            reject: (err) => {
+              reject(err);
+            },
+          });
+        });
       }
     }
+
     return Promise.reject(error);
   }
 );
@@ -175,7 +280,7 @@ export const sendMessage = async (messageData) => {
 export const fetchMessages = async () => {
   try {
     // Ensure token is included
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("authToken");
     const headers = token ? { "x-auth-token": token } : {};
 
     const response = await api.get("/messages", { headers });
@@ -189,7 +294,7 @@ export const fetchMessages = async () => {
 export const fetchUnreadMessageCount = async () => {
   try {
     // Ensure token is included
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("authToken");
     const headers = token ? { "x-auth-token": token } : {};
 
     const response = await api.get("/messages/unread-count", { headers });
@@ -207,7 +312,7 @@ export const markMessageAsRead = async (id) => {
   const attemptMarkAsRead = async () => {
     try {
       // Ensure token is included
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("authToken");
       const headers = token ? { "x-auth-token": token } : {};
 
       // Try POST instead of PATCH as some servers may not handle PATCH properly
@@ -236,7 +341,7 @@ export const markMessageAsRead = async (id) => {
 export const deleteMessage = async (id) => {
   try {
     // Ensure token is included
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("authToken");
     const headers = token ? { "x-auth-token": token } : {};
 
     const response = await api.delete(`/messages/${id}`, { headers });
