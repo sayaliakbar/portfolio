@@ -6,20 +6,17 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
 const morgan = require("morgan");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const corsOptions = require("./config/corsOptions");
 const { messageLogger } = require("./middleware/logger");
 const connectDB = require("./config/database");
+const setupAdminUser = require("./scripts/setupAdmin");
 
 // Routes
 const projectRoutes = require("./routes/projects");
 const messageRoutes = require("./routes/messages");
 const authRoutes = require("./routes/auth");
-const auth0Routes = require("./routes/auth0");
-const cloudflareRoutes = require("./routes/cloudflareAccess");
 const uploadRoutes = require("./routes/uploads");
 const resumeRoutes = require("./routes/resume");
 
@@ -40,34 +37,10 @@ const accessLogStream = fs.createWriteStream(path.join(logsDir, "access.log"), {
   flags: "a",
 });
 
-// Session configuration
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    collectionName: "sessions",
-    ttl: 60 * 60 * 24, // 1 day
-    touchAfter: 24 * 3600, // time period in seconds to refresh session
-    crypto: {
-      secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
-    },
-    autoRemove: "native", // Use MongoDB's TTL index
-  }),
-  cookie: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
-    sameSite: "strict",
-  },
-};
-
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" })); // Limit JSON body size for security
 app.use(express.urlencoded({ extended: false, limit: "50mb" }));
-app.use(session(sessionConfig));
 
 // Configure Morgan logger based on environment
 if (process.env.NODE_ENV === "production") {
@@ -90,8 +63,6 @@ app.use("/api", apiLimiter);
 app.use("/api/projects", projectRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/auth0", auth0Routes);
-app.use("/api/cloudflare", cloudflareRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/resume", resumeRoutes);
 
@@ -100,8 +71,15 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
 connectDB()
-  .then(() => {
+  .then(async () => {
     console.log("Database connection established successfully");
+
+    // Set up admin user if it doesn't exist
+    try {
+      await setupAdminUser();
+    } catch (error) {
+      console.error("Error during admin setup:", error);
+    }
   })
   .catch((err) => {
     console.error("Could not connect to database:", err);
