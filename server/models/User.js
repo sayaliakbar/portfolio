@@ -11,29 +11,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // 2FA fields
-  twoFactorEnabled: {
-    type: Boolean,
-    default: false,
-  },
-  twoFactorSecret: {
-    type: String,
-    default: null,
-  },
-  twoFactorBackupCodes: {
-    type: [String],
-    default: [],
-  },
-  // Resume fields
-  resumeFile: {
-    type: String,
-    default: null,
-  },
-  resumeUrl: {
-    type: String,
-    default: null,
-  },
-  // Refresh token fields
+  // Authentication fields
   refreshToken: {
     type: String,
     default: null,
@@ -42,12 +20,22 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
-  // Existing fields
+  // User role
   role: {
     type: String,
     default: "admin",
     enum: ["admin"],
   },
+  // Resume URL
+  resumeUrl: {
+    type: String,
+    default: null,
+  },
+  resumeFile: {
+    type: String,
+    default: null,
+  },
+  // Security fields
   loginAttempts: {
     type: Number,
     default: 0,
