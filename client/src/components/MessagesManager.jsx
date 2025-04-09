@@ -1,7 +1,52 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion as Motion } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { getAuthStatus } from "../utils/auth";
 import api from "../utils/api";
+import { showToast } from "../utils/toast";
+
+// Confirmation Dialog Component
+const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <Motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        >
+          <Motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {title}
+              </h3>
+              <p className="text-gray-600">{message}</p>
+            </div>
+            <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+              <button
+                onClick={onCancel}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors cursor-pointer "
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors cursor-pointer"
+              >
+                Confirm
+              </button>
+            </div>
+          </Motion.div>
+        </Motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 // Cache for messages data
 let messagesCache = {
@@ -16,6 +61,33 @@ const MessagesManager = ({ onMessageRead }) => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [authError, setAuthError] = useState(false);
   const [rateLimitError, setRateLimitError] = useState(false);
+
+  // Confirm dialog states
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showToastMessage = (message, type = "success") => {
+    showToast(message, type);
+  };
+
+  // Show confirmation dialog
+  const showConfirmDialog = (title, message, onConfirm) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+    });
+  };
+
+  // Close confirmation dialog
+  const closeConfirmDialog = () => {
+    setConfirmDialog({ ...confirmDialog, isOpen: false });
+  };
 
   // Optimized initialization function with caching
   const initializeComponent = useCallback(async () => {
@@ -92,16 +164,23 @@ const MessagesManager = ({ onMessageRead }) => {
         } else if (error.response.status === 401) {
           setAuthError(true);
         } else {
-          alert(
-            `Failed to load messages: ${error.response.status} ${error.response.statusText}`
+          showToastMessage(
+            `Failed to load messages: ${error.response.status} ${error.response.statusText}`,
+            "error"
           );
         }
       } else if (error.request) {
         // Request was made but no response received (network error)
-        alert("Network error. Please check your connection and try again.");
+        showToastMessage(
+          "Network error. Please check your connection and try again.",
+          "error"
+        );
       } else {
         // Other errors
-        alert("Failed to load messages. Please try again later.");
+        showToastMessage(
+          "Failed to load messages. Please try again later.",
+          "error"
+        );
       }
 
       setLoading(false);
@@ -165,48 +244,61 @@ const MessagesManager = ({ onMessageRead }) => {
   };
 
   const handleDeleteMessage = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this message?")) {
-      return;
-    }
+    showConfirmDialog(
+      "Delete Message",
+      "Are you sure you want to delete this message? This action cannot be undone.",
+      async () => {
+        try {
+          // Update UI immediately for better user experience
+          const updatedMessages = messages.filter((m) => m._id !== id);
+          setMessages(updatedMessages);
 
-    try {
-      // Update UI immediately for better user experience
-      const updatedMessages = messages.filter((m) => m._id !== id);
-      setMessages(updatedMessages);
+          // Update cache to maintain consistency
+          if (messagesCache.data) {
+            messagesCache.data = updatedMessages;
+          }
 
-      // Update cache to maintain consistency
-      if (messagesCache.data) {
-        messagesCache.data = updatedMessages;
-      }
+          // Clear selected message if it was the one deleted
+          if (selectedMessage && selectedMessage._id === id) {
+            setSelectedMessage(null);
+          }
 
-      // Clear selected message if it was the one deleted
-      if (selectedMessage && selectedMessage._id === id) {
-        setSelectedMessage(null);
-      }
+          // Make API call in the background
+          await api.delete(`/messages/${id}`);
 
-      // Make API call in the background
-      await api.delete(`/messages/${id}`);
-    } catch (error) {
-      console.error(`Error deleting message ${id}:`, error);
+          // Show success toast
+          showToastMessage("Message deleted successfully");
+        } catch (error) {
+          console.error(`Error deleting message ${id}:`, error);
 
-      // On error, restore original messages from a fresh API call
-      loadMessages(true);
+          // On error, restore original messages from a fresh API call
+          loadMessages(true);
 
-      // Show error message
-      if (error.response) {
-        if (error.response.status === 429) {
-          alert("Rate limit exceeded. Please try again later.");
-        } else if (error.response.status === 401) {
-          setAuthError(true);
-        } else {
-          alert(
-            `Failed to delete message: ${error.response.status} ${error.response.statusText}`
-          );
+          // Show error message
+          if (error.response) {
+            if (error.response.status === 429) {
+              showToastMessage(
+                "Rate limit exceeded. Please try again later.",
+                "error"
+              );
+            } else if (error.response.status === 401) {
+              setAuthError(true);
+            } else {
+              showToastMessage(
+                `Failed to delete message: ${error.response.status} ${error.response.statusText}`,
+                "error"
+              );
+            }
+          } else {
+            showToastMessage(
+              "Failed to delete the message. Please try again.",
+              "error"
+            );
+          }
         }
-      } else {
-        alert("Failed to delete the message. Please try again.");
+        closeConfirmDialog();
       }
-    }
+    );
   };
 
   const formatDate = (dateString) => {
@@ -283,6 +375,15 @@ const MessagesManager = ({ onMessageRead }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md">
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={closeConfirmDialog}
+      />
+
       <div className="p-6 border-b">
         <h2 className="text-xl font-semibold">Messages</h2>
         <p className="text-gray-500 text-sm mt-1">
@@ -356,7 +457,10 @@ const MessagesManager = ({ onMessageRead }) => {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDeleteMessage(selectedMessage._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteMessage(selectedMessage._id);
+                  }}
                   className="bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition-colors text-sm cursor-pointer"
                 >
                   Delete
