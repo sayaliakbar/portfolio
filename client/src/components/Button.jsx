@@ -10,7 +10,7 @@ const Button = ({
   onClick,
   ...props
 }) => {
-  const baseClasses = `btn btn-${variant} ${className}`;
+  const baseClasses = `btn btn-${variant} cursor-pointer ${className}`;
   const location = useLocation();
   const navigate = useNavigate();
 
