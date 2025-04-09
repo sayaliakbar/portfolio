@@ -6,6 +6,7 @@ import {
   uploadProjectImage,
   deleteProjectImage,
 } from "../utils/api";
+import { showToast } from "../utils/toast";
 
 const ProjectForm = ({ project, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -214,13 +215,16 @@ const ProjectForm = ({ project, onSubmit, onCancel }) => {
     try {
       if (isEditing) {
         await updateProject(project._id || project.id, formData);
+        showToast("Project updated successfully!", "success");
       } else {
         await createProject(formData);
+        showToast("Project added successfully!", "success");
       }
       onSubmit();
     } catch (error) {
       console.error("Error saving project:", error);
       setError("Failed to save project. Please try again.");
+      showToast("Failed to save project. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -299,7 +303,7 @@ const ProjectForm = ({ project, onSubmit, onCancel }) => {
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="ml-4 text-red-600 hover:text-red-800"
+                    className="ml-4 text-red-600 hover:text-red-800 cursor-pointer"
                   >
                     Remove Image
                   </button>
@@ -345,7 +349,7 @@ const ProjectForm = ({ project, onSubmit, onCancel }) => {
               <button
                 type="button"
                 onClick={handleAddTech}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700 cursor-pointer"
               >
                 Add
               </button>
@@ -420,14 +424,14 @@ const ProjectForm = ({ project, onSubmit, onCancel }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading || uploadingImage}
-            className={`px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 ${
+            className={`px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 cursor-pointer ${
               loading || uploadingImage ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
