@@ -54,8 +54,6 @@ api.interceptors.request.use(
   async (config) => {
     // Get token from localStorage
     let token = localStorage.getItem("authToken");
-    console.log("API Request to:", config.url);
-    console.log("Token exists:", !!token);
 
     // If token exists, check if it's expired
     if (token) {
@@ -108,7 +106,6 @@ api.interceptors.request.use(
 
       // Token is valid (or just refreshed), add to headers
       config.headers["x-auth-token"] = token;
-      console.log("Added token to request headers");
     }
 
     return config;
