@@ -444,81 +444,33 @@ const Admin = () => {
         </Motion.div>
 
         <Motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-lg shadow-lg p-6"
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="bg-white rounded-lg shadow p-5"
         >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-lg font-medium opacity-90">Featured</p>
-              <h3 className="text-3xl font-bold mt-2">{featuredCount}</h3>
-            </div>
-            <div className="p-3 bg-white bg-opacity-70 rounded-lg shadow-md">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="black"
-                strokeWidth={3}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                />
-              </svg>
-            </div>
-          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-8 h-8 text-indigo-500 mb-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976-2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+            />
+          </svg>
+          <p className="text-lg font-medium opacity-90">Featured</p>
+          <p className="text-2xl font-bold mt-1 mb-2">{featuredCount}</p>
           <div className="mt-4">
             <button
               onClick={() => handleTabSwitch("projects")}
-              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-purple-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
+              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-green-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
             >
               Manage
-            </button>
-          </div>
-        </Motion.div>
-
-        <Motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-lg shadow-lg p-6"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-lg font-medium opacity-90">Messages</p>
-              <h3 className="text-3xl font-bold mt-2">
-                {unreadMessageCount > 0 ? `${unreadMessageCount} new` : "0 new"}
-              </h3>
-            </div>
-            <div className="p-3 bg-white bg-opacity-70 rounded-lg shadow-md">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="black"
-                strokeWidth={3}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          </div>
-          <div className="mt-4">
-            <button
-              onClick={() => handleTabSwitch("messages")}
-              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-amber-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
-            >
-              View All
             </button>
           </div>
         </Motion.div>
@@ -1053,7 +1005,7 @@ const Admin = () => {
               <div className="flex items-center">
                 <button
                   onClick={handleLogout}
-                  className="ml-3 bg-white hover:bg-red-50 text-red-700 px-4 py-2 rounded-md text-sm font-medium border border-red-300 hover:border-red-400 transition-colors"
+                  className="ml-3 bg-white hover:bg-red-50 text-red-700 px-4 py-2 rounded-md text-sm font-medium border border-red-300 hover:border-red-400 transition-colors cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -1073,7 +1025,7 @@ const Admin = () => {
                   activeTab === "dashboard"
                     ? "bg-indigo-100 text-indigo-700"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                } cursor-pointer`}
               >
                 Dashboard
               </button>
@@ -1083,7 +1035,7 @@ const Admin = () => {
                   activeTab === "projects"
                     ? "bg-indigo-100 text-indigo-700"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                } cursor-pointer`}
               >
                 Projects
               </button>
@@ -1093,7 +1045,7 @@ const Admin = () => {
                   activeTab === "messages"
                     ? "bg-indigo-100 text-indigo-700"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                } cursor-pointer`}
               >
                 Messages
                 {unreadMessageCount > 0 && (
@@ -1108,7 +1060,7 @@ const Admin = () => {
                   activeTab === "resume"
                     ? "bg-indigo-100 text-indigo-700"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                } cursor-pointer`}
               >
                 Resume
               </button>
