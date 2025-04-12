@@ -97,7 +97,6 @@ const MessagesManager = ({ onMessageRead }) => {
     try {
       // Use the optimized auth check function
       const isAuth = await getAuthStatus();
-      console.log("Authentication status:", isAuth);
 
       if (isAuth) {
         await loadMessages();
