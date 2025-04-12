@@ -4,79 +4,11 @@ import { motion as Motion } from "framer-motion";
 import Section from "../components/Section";
 import ProjectCard from "../components/ProjectCard";
 import { fetchProjects } from "../utils/api";
+// Import the MongoDB exported JSON data
+import portfolioProjects from "../data/portfolio.projects.json";
 
-// Import the same placeholder projects as in Home.jsx
-const placeholderProjects = [
-  {
-    id: 1,
-    title: "E-Commerce Platform",
-    description:
-      "A full-featured e-commerce platform with product management, cart functionality, and payment processing.",
-    image:
-      "https://images.unsplash.com/photo-1556742031-c6961e8560b0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-    technologies: ["React", "Node.js", "Express", "MongoDB", "Redux"],
-    github: "https://github.com",
-    demo: "https://example.com",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "Task Management App",
-    description:
-      "A collaborative task management application with real-time updates and team workspaces.",
-    image:
-      "https://images.unsplash.com/photo-1540350394557-8d14678e7f91?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-    technologies: ["React", "Node.js", "Socket.io", "MongoDB"],
-    github: "https://github.com",
-    demo: "https://example.com",
-    featured: true,
-  },
-  {
-    id: 3,
-    title: "Social Media Dashboard",
-    description:
-      "A dashboard for managing and analyzing social media accounts across multiple platforms.",
-    image:
-      "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-    technologies: ["React", "Node.js", "Chart.js", "Express"],
-    github: "https://github.com",
-    demo: "https://example.com",
-    featured: true,
-  },
-  {
-    id: 4,
-    title: "Weather Application",
-    description:
-      "A weather forecast app that displays current and future weather conditions based on location.",
-    image:
-      "https://images.unsplash.com/photo-1592210454359-9043f067919b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-    technologies: ["React", "API Integration", "Geolocation", "Chart.js"],
-    github: "https://github.com",
-    demo: "https://example.com",
-  },
-  {
-    id: 5,
-    title: "Recipe Finder",
-    description:
-      "An application that allows users to search for recipes based on ingredients, dietary restrictions, and cuisine type.",
-    image:
-      "https://images.unsplash.com/photo-1466637574441-749b8f19452f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-    technologies: ["React", "Node.js", "MongoDB", "Express"],
-    github: "https://github.com",
-    demo: "https://example.com",
-  },
-  {
-    id: 6,
-    title: "Budget Tracker",
-    description:
-      "A personal finance application to track income, expenses, and savings goals with visualization.",
-    image:
-      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-    technologies: ["React", "Chart.js", "Local Storage", "Tailwind CSS"],
-    github: "https://github.com",
-    demo: "https://example.com",
-  },
-];
+// Use the imported JSON file as placeholder data
+const placeholderProjects = portfolioProjects;
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
