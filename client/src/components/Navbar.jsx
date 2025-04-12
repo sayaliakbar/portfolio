@@ -136,7 +136,7 @@ const Navbar = () => {
         </ul>
 
         {/* Mobile Menu Toggle */}
-        <div className="md:hidden ">
+        <div className="md:hidden cursor-pointer">
           <button
             onClick={toggleMenu}
             className="focus:outline-none cursor-pointer"
