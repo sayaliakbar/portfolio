@@ -28,30 +28,30 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
         >
           <Motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto overflow-hidden"
           >
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <div className="p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                 {title}
               </h3>
-              <p className="text-gray-600">{message}</p>
+              <p className="text-sm sm:text-base text-gray-600">{message}</p>
             </div>
-            <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+            <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 flex justify-end space-x-3">
               <button
                 onClick={onCancel}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm rounded-md transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={onConfirm}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors cursor-pointer"
               >
                 Confirm
               </button>
@@ -378,10 +378,11 @@ const Admin = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="bg-white rounded-lg shadow p-5"
+          className="bg-white rounded-lg shadow p-5 relative overflow-hidden group"
         >
+          <div className="absolute top-0 right-0 h-20 w-20 bg-indigo-100 rounded-bl-full transform translate-x-6 -translate-y-6 opacity-60 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-300"></div>
           <svg
-            className="w-8 h-8 text-indigo-500 mb-3"
+            className="w-8 h-8 text-indigo-500 mb-3 relative z-10"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -395,13 +396,27 @@ const Admin = () => {
             />
           </svg>
           <p className="text-lg font-medium opacity-90">Projects</p>
-          <p className="text-2xl font-bold mt-1 mb-2">{projects.length || 0}</p>
+          <p className="text-2xl font-bold mt-1 mb-4">{projects.length || 0}</p>
           <div className="mt-4">
             <button
               onClick={handleAddProject}
-              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-green-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
+              className="w-full text-sm bg-indigo-600 text-white hover:bg-indigo-700 py-2 px-4 rounded-md shadow-sm transition-all duration-200 cursor-pointer font-medium flex items-center justify-center space-x-1"
             >
-              Add New
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <span>Add New</span>
             </button>
           </div>
         </Motion.div>
@@ -410,10 +425,11 @@ const Admin = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className="bg-white rounded-lg shadow p-5"
+          className="bg-white rounded-lg shadow p-5 relative overflow-hidden group"
         >
+          <div className="absolute top-0 right-0 h-20 w-20 bg-indigo-100 rounded-bl-full transform translate-x-6 -translate-y-6 opacity-60 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-300"></div>
           <svg
-            className="w-8 h-8 text-indigo-500 mb-3"
+            className="w-8 h-8 text-indigo-500 mb-3 relative z-10"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -427,7 +443,7 @@ const Admin = () => {
             />
           </svg>
           <p className="text-lg font-medium opacity-90">Messages</p>
-          <p className="text-2xl font-bold mt-1 mb-2">
+          <p className="text-2xl font-bold mt-1 mb-4">
             {unreadMessageCount || 0}{" "}
             <span className="text-sm font-normal text-gray-500">
               {unreadMessageCount === 1 ? "unread message" : "unread messages"}
@@ -436,9 +452,23 @@ const Admin = () => {
           <div className="mt-4">
             <button
               onClick={() => handleTabSwitch("messages")}
-              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-green-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
+              className="w-full text-sm bg-indigo-600 text-white hover:bg-indigo-700 py-2 px-4 rounded-md shadow-sm transition-all duration-200 cursor-pointer font-medium flex items-center justify-center space-x-1"
             >
-              Manage
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                />
+              </svg>
+              <span>Manage</span>
             </button>
           </div>
         </Motion.div>
@@ -447,11 +477,12 @@ const Admin = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
-          className="bg-white rounded-lg shadow p-5"
+          className="bg-white rounded-lg shadow p-5 relative overflow-hidden group"
         >
+          <div className="absolute top-0 right-0 h-20 w-20 bg-indigo-100 rounded-bl-full transform translate-x-6 -translate-y-6 opacity-60 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-300"></div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-8 h-8 text-indigo-500 mb-3"
+            className="w-8 h-8 text-indigo-500 mb-3 relative z-10"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -464,13 +495,27 @@ const Admin = () => {
             />
           </svg>
           <p className="text-lg font-medium opacity-90">Featured</p>
-          <p className="text-2xl font-bold mt-1 mb-2">{featuredCount}</p>
+          <p className="text-2xl font-bold mt-1 mb-4">{featuredCount}</p>
           <div className="mt-4">
             <button
               onClick={() => handleTabSwitch("projects")}
-              className="text-sm bg-white text-black bg-opacity-20 hover:bg-opacity-90 hover:text-green-700 py-2 px-4 rounded-full transition-all duration-200 cursor-pointer font-medium"
+              className="w-full text-sm bg-indigo-600 text-white hover:bg-indigo-700 py-2 px-4 rounded-md shadow-sm transition-all duration-200 cursor-pointer font-medium flex items-center justify-center space-x-1"
             >
-              Manage
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                />
+              </svg>
+              <span>Manage</span>
             </button>
           </div>
         </Motion.div>
@@ -1017,53 +1062,67 @@ const Admin = () => {
         {/* Main Content */}
         <div className="flex-grow py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-4 pb-5 mb-8 border-b border-gray-200">
-              {/* Tabs */}
-              <button
-                onClick={() => handleTabSwitch("dashboard")}
-                className={`px-3 py-2 font-medium text-sm rounded-md ${
-                  activeTab === "dashboard"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700"
-                } cursor-pointer`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => handleTabSwitch("projects")}
-                className={`px-3 py-2 font-medium text-sm rounded-md ${
-                  activeTab === "projects"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700"
-                } cursor-pointer`}
-              >
-                Projects
-              </button>
-              <button
-                onClick={() => handleTabSwitch("messages")}
-                className={`px-3 py-2 font-medium text-sm rounded-md flex items-center ${
-                  activeTab === "messages"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700"
-                } cursor-pointer`}
-              >
-                Messages
-                {unreadMessageCount > 0 && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    {unreadMessageCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => handleTabSwitch("resume")}
-                className={`px-3 py-2 font-medium text-sm rounded-md ${
-                  activeTab === "resume"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700"
-                } cursor-pointer`}
-              >
-                Resume
-              </button>
+            <div className="bg-white rounded-lg shadow-sm p-2 mb-8">
+              <div className="flex flex-wrap items-center gap-1">
+                {/* Tabs */}
+                <button
+                  onClick={() => handleTabSwitch("dashboard")}
+                  className={`px-4 py-2 font-medium text-sm rounded-md transition-all duration-200 flex-shrink-0 relative ${
+                    activeTab === "dashboard"
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "text-gray-600 hover:bg-gray-100"
+                  } cursor-pointer`}
+                >
+                  Dashboard
+                  {activeTab === "dashboard" && (
+                    <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleTabSwitch("projects")}
+                  className={`px-4 py-2 font-medium text-sm rounded-md transition-all duration-200 flex-shrink-0 relative ${
+                    activeTab === "projects"
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "text-gray-600 hover:bg-gray-100"
+                  } cursor-pointer`}
+                >
+                  Projects
+                  {activeTab === "projects" && (
+                    <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleTabSwitch("messages")}
+                  className={`px-4 py-2 font-medium text-sm rounded-md transition-all duration-200 flex-shrink-0 relative ${
+                    activeTab === "messages"
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "text-gray-600 hover:bg-gray-100"
+                  } cursor-pointer flex items-center`}
+                >
+                  Messages
+                  {unreadMessageCount > 0 && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      {unreadMessageCount}
+                    </span>
+                  )}
+                  {activeTab === "messages" && (
+                    <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleTabSwitch("resume")}
+                  className={`px-4 py-2 font-medium text-sm rounded-md transition-all duration-200 flex-shrink-0 relative ${
+                    activeTab === "resume"
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "text-gray-600 hover:bg-gray-100"
+                  } cursor-pointer`}
+                >
+                  Resume
+                  {activeTab === "resume" && (
+                    <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Main content */}
