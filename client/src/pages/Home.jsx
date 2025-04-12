@@ -9,7 +9,11 @@ import SkillCard from "../components/SkillCard";
 import ContactForm from "../components/ContactForm";
 import Button from "../components/Button";
 import ResumeButton from "../components/ResumeButton";
-import { fetchFeaturedProjects } from "../utils/api";
+// Import API utilities
+import { fetchProjects } from "../utils/api";
+// Import the portfolio projects data as fallback
+import portfolioProjects from "../data/portfolio.projects.json";
+
 import heroImage from "../assets/hero.png";
 
 const HomePage = () => {
@@ -21,12 +25,19 @@ const HomePage = () => {
     const loadProjects = async () => {
       try {
         // Try to fetch from API first
-        const data = await fetchFeaturedProjects();
-        setProjects(data);
-      } catch (err) {
-        // If API fails, use placeholder data
-        console.log("Using placeholder projects data", err);
-        setProjects(placeholderProjects);
+        const data = await fetchProjects();
+        // Filter for featured projects
+        const featuredProjects = data.filter(
+          (project) => project.featured === true
+        );
+        setProjects(featuredProjects);
+      } catch (error) {
+        // If API fails, use the JSON file and filter for featured projects
+        console.log("Using placeholder projects data:", error);
+        const featuredProjects = portfolioProjects.filter(
+          (project) => project.featured === true
+        );
+        setProjects(featuredProjects);
       } finally {
         setLoading(false);
       }
@@ -62,46 +73,6 @@ const HomePage = () => {
     { icon: FaReact, name: "Frontend Development", level: 90 },
     { icon: FaServer, name: "Backend Development", level: 85 },
     { icon: FaDatabase, name: "Database Management", level: 80 },
-  ];
-
-  // Placeholder projects (fallback if API fails)
-  const placeholderProjects = [
-    {
-      id: 1,
-      title: "E-Commerce Platform",
-      description:
-        "A full-featured e-commerce platform with product management, cart functionality, and payment processing.",
-      image:
-        "https://images.unsplash.com/photo-1556742031-c6961e8560b0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-      technologies: ["React", "Node.js", "Express", "MongoDB", "Redux"],
-      github: "https://github.com",
-      demo: "https://example.com",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Task Management App",
-      description:
-        "A collaborative task management application with real-time updates and team workspaces.",
-      image:
-        "https://images.unsplash.com/photo-1540350394557-8d14678e7f91?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-      technologies: ["React", "Node.js", "Socket.io", "MongoDB"],
-      github: "https://github.com",
-      demo: "https://example.com",
-      featured: true,
-    },
-    {
-      id: 3,
-      title: "Social Media Dashboard",
-      description:
-        "A dashboard for managing and analyzing social media accounts across multiple platforms.",
-      image:
-        "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=850&q=80",
-      technologies: ["React", "Node.js", "Chart.js", "Express"],
-      github: "https://github.com",
-      demo: "https://example.com",
-      featured: true,
-    },
   ];
 
   return (
