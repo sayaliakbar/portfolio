@@ -1,0 +1,409 @@
+[
+  {
+    "_id": "67f042d22e0706248476c023",
+
+    "title": "JavaScript Amazon Project",
+    "description": "This project is a JavaScript implementation of an Amazon-like e-commerce platform. The application provides users with an interactive shopping experience, including product browsing, cart management, checkout functionality, and more.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743801938/portfolio/projects/yeqtkhuacikeatlioco8.png",
+    "imagePublicId": "portfolio/projects/yeqtkhuacikeatlioco8",
+    "technologies": ["frontend", "html", "css", "javascript", "git"],
+    "github": "https://github.com/sayaliakbar/javascript-amazon-project",
+    "demo": "https://sayaliakbar.github.io/javascript-amazon-project/",
+    "featured": true,
+    "createdAt": {
+      "$date": "2025-04-04T20:36:34.750Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f046392e0706248476c06d",
+    "title": "Rock Paper Scissors Game",
+    "description": "A simple interactive Rock Paper Scissors game built with HTML, CSS, and JavaScript.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743799820/portfolio/projects/z1rwzmgg6xrgvu8ggsvd.png",
+    "imagePublicId": "portfolio/projects/z1rwzmgg6xrgvu8ggsvd",
+    "technologies": ["javascript", "html", "css", "frontend", "git"],
+    "github": "https://github.com/sayaliakbar/rock-paper-scissors",
+    "demo": "https://sayaliakbar.github.io/rock-paper-scissors/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T20:51:05.773Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f0478a2e0706248476c074",
+    "title": "Promptopia",
+    "description": "Promptopia is an open-source AI prompting tool designed for the modern world. It allows users to discover, create, and share creative prompts for AI applications like ChatGPT, DALL-E, and more.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743799935/portfolio/projects/y6ptijtgt3zofri5gpqz.png",
+    "imagePublicId": "portfolio/projects/y6ptijtgt3zofri5gpqz",
+    "technologies": [
+      "react",
+      "oauth",
+      "mongodb",
+      "nextjs",
+      "web-application",
+      "full-stack",
+      "tailwindcss",
+      "vercel",
+      "nextauth",
+      "ai-tools",
+      "ai-prompts",
+      "javascript"
+    ],
+    "github": "https://github.com/sayaliakbar/promptopia",
+    "demo": "https://promptopia-rouge-rho.vercel.app/",
+    "featured": true,
+    "createdAt": {
+      "$date": "2025-04-04T20:56:42.894Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f049542e0706248476c08b",
+    "title": "Job Listings with Filtering",
+    "description": "A responsive job listings application with dynamic filtering capabilities built using React and Tailwind CSS. This project implements an interactive job board where users can filter listings by role, level, languages, and tools with an intuitive tag-based interface.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743800618/portfolio/projects/aqqgm80phzpahb35s8t0.png",
+    "imagePublicId": "portfolio/projects/aqqgm80phzpahb35s8t0",
+    "technologies": [
+      "react",
+      "javascript",
+      "web-development",
+      "html5",
+      "component",
+      "css3",
+      "filtering",
+      "responsive-design",
+      "tailwind-css",
+      "vite",
+      "react-hooks",
+      "frontend-mentor",
+      "job-listings",
+      "zustand"
+    ],
+    "github": "https://github.com/sayaliakbar/job-listings-page",
+    "demo": "https://jobslistingbysayaliakbar.netlify.app/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:04:20.179Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f04a342e0706248476c090",
+    "title": "Yorfy NFT Portfolio UI",
+    "description": "Modern NFT collection showcase website built with React 19 and vanilla CSS. A responsive frontend implementation of a Figma design featuring NFT collections, roadmap timeline, and community sections.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743800855/portfolio/projects/eypbpzwlg5ugmnsg9gi9.png",
+    "imagePublicId": "portfolio/projects/eypbpzwlg5ugmnsg9gi9",
+    "technologies": [
+      "react",
+      "javascript",
+      "css",
+      "portfolio",
+      "ui",
+      "crypto",
+      "react-router",
+      "frontend",
+      "netlify",
+      "web-design",
+      "responsive-design",
+      "component-based",
+      "vite",
+      "figma-design"
+    ],
+    "github": "https://github.com/sayaliakbar/nft-portfolio-ui",
+    "demo": "https://nftportfoliobysayaliakbar.netlify.app/",
+    "featured": true,
+    "createdAt": {
+      "$date": "2025-04-04T21:08:04.307Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f04f2af3203d570d7d49a3",
+    "title": "Modern GPT3",
+    "description": "Modern GPT3 is a static website built with React, based on a Figma design by AR Shakir. The project showcases a modern UI/UX design inspired by the GPT-3 model.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802133/portfolio/projects/a1jmatxhkgmb9pddertq.png",
+    "imagePublicId": "portfolio/projects/a1jmatxhkgmb9pddertq",
+    "technologies": [
+      "react",
+      "design",
+      "responsive",
+      "bem",
+      "animation",
+      "static-site",
+      "figma",
+      "modern-design",
+      "modern-ui",
+      "gpt3",
+      "modern-ui-ux"
+    ],
+    "github": "https://github.com/sayaliakbar/modern-gpt3",
+    "demo": "https://moderngpt3bysayaliakbar.netlify.app/",
+    "featured": true,
+    "createdAt": {
+      "$date": "2025-04-04T21:29:14.874Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f04f79f3203d570d7d49a8",
+    "title": "Weather Widget",
+    "description": "Weather Widget is a responsive web application built with React and Material UI, designed to fetch and display real-time weather data using the OpenWeatherMap API.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802212/portfolio/projects/xckpvkybhkwgm198dezk.png",
+    "imagePublicId": "portfolio/projects/xckpvkybhkwgm198dezk",
+    "technologies": [
+      "react",
+      "javascript",
+      "api",
+      "weather",
+      "frontend",
+      "responsive",
+      "material-ui",
+      "weather-widget",
+      "weather-app"
+    ],
+    "github": "https://github.com/sayaliakbar/weather-widget",
+    "demo": "https://weatherwidgetbysayaliakbar.netlify.app/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:30:33.833Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f04fc8f3203d570d7d49ad",
+    "title": "Todo App",
+    "description": "The application enables users to manage tasks efficiently with features such as adding, completing, deleting, and reordering tasks via drag-and-drop. It also includes filters for task status, a light/dark mode toggle, and ensures responsiveness across devices.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802289/portfolio/projects/zavfvjabusz8snafw7yo.png",
+    "imagePublicId": "portfolio/projects/zavfvjabusz8snafw7yo",
+    "technologies": [
+      "react",
+      "nodejs",
+      "javascript",
+      "express",
+      "mongodb",
+      "frontend",
+      "backend",
+      "full-stack",
+      "netlify",
+      "mern-stack",
+      "frontend-mentor",
+      "redux-toolkit",
+      "vercel",
+      "rtk-query",
+      "dnd-kit"
+    ],
+    "github": "https://github.com/sayaliakbar/todo-app",
+    "demo": "https://todoappbysayaliakbar.netlify.app/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:31:52.922Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f05070f3203d570d7d49b3",
+    "title": "Dev Finder - GitHub User Search",
+    "description": "The application allows users to search for GitHub profiles by username, displaying relevant information fetched from the GitHub Users API. Key features include a responsive design, light and dark theme toggle, and dynamic error handling.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802391/portfolio/projects/h7qmfgk0vof9stejwn5x.png",
+    "imagePublicId": "portfolio/projects/h7qmfgk0vof9stejwn5x",
+    "technologies": [
+      "javascript",
+      "css",
+      "html",
+      "github-api",
+      "responsive-design",
+      "dark-mode",
+      "api-integration",
+      "user-search",
+      "frontend-mentor"
+    ],
+    "github": "https://github.com/sayaliakbar/github-user-search-app",
+    "demo": "https://perfect-bun.surge.sh",
+    "featured": true,
+    "createdAt": {
+      "$date": "2025-04-04T21:34:40.091Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f0511ef3203d570d7d49b8",
+    "title": "Intro Section With Dropdown Navigation",
+    "description": "The project features a responsive introductory section with interactive dropdown menus, built using semantic HTML5, CSS, and JavaScript.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802547/portfolio/projects/fvbie5fmhfkoi6g3kzgn.png",
+    "imagePublicId": "portfolio/projects/fvbie5fmhfkoi6g3kzgn",
+    "technologies": ["javascript", "html5", "frontend", "css3"],
+    "github": "https://github.com/sayaliakbar/intro-section-with-dropdown-navigation/",
+    "demo": "https://solid-engine.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:37:34.799Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f05192f3203d570d7d49bd",
+    "title": "Tip Calculator App",
+    "description": "A responsive tip calculator app built with HTML, CSS, and JavaScript, allowing users to input the bill amount, select a tip percentage, and specify the number of people to split the bill, calculating the tip and total amount per person.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802716/portfolio/projects/ccy04t18u5rzd6k9csrs.png",
+    "imagePublicId": "portfolio/projects/ccy04t18u5rzd6k9csrs",
+    "technologies": ["html5", "frontend", "css3", "tailwindcss"],
+    "github": "https://github.com/sayaliakbar/tip-calculator-app",
+    "demo": "https://enchanted-harbor.surge.sh/",
+    "featured": true,
+    "createdAt": {
+      "$date": "2025-04-04T21:39:30.919Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f0522ff3203d570d7d49c2",
+    "title": "Interactice Rating Component",
+    "description": "A responsive interactive rating component built with HTML, CSS, and JavaScript, allowing users to select a rating and submit it, displaying a thank you message.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802882/portfolio/projects/a5ckb7scefu4hpcayyqx.png",
+    "imagePublicId": "portfolio/projects/a5ckb7scefu4hpcayyqx",
+    "technologies": [
+      "javascript",
+      "html5",
+      "frontend",
+      "tailwindcss",
+      "frontend-mentor"
+    ],
+    "github": "https://github.com/sayaliakbar/interactive-rating-component",
+    "demo": "https://uptight-chance.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:42:07.021Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f0529bf3203d570d7d49c7",
+    "title": "Notifications Page",
+    "description": "A responsive notifications page built with HTML, CSS, and JavaScript, featuring dynamic rendering of notifications from data and interactive toggling of their visual state based on read status.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743802985/portfolio/projects/rqcuiy6h6wiv4fvz3en8.png",
+    "imagePublicId": "portfolio/projects/rqcuiy6h6wiv4fvz3en8",
+    "technologies": ["design", "html5", "frontend", "css3", "tailwindcss"],
+    "github": "https://github.com/sayaliakbar/notifications-page",
+    "demo": "https://gaping-rose.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:43:55.049Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f05330f3203d570d7d49cc",
+    "title": "Age Calculator",
+    "description": "A responsive age calculator app built with HTML, CSS, and JavaScript, featuring form validation for date correctness and past dates, and calculating age in years, months, and days.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743803151/portfolio/projects/nwbqy1vtqxku2ixf3o3y.png",
+    "imagePublicId": "portfolio/projects/nwbqy1vtqxku2ixf3o3y",
+    "technologies": ["javascript", "css3", "tailwindcss", "html3"],
+    "github": "https://github.com/sayaliakbar/age-calculator-app",
+    "demo": "https://overt-rabbits.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:46:24.626Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f053b8f3203d570d7d49d1",
+    "title": "Intro Component With Sign Up Form",
+    "description": "A responsive HTML, CSS, and JavaScript sign-up form component with client-side validation.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743803253/portfolio/projects/nrn9hlayxt7rgoug56ne.png",
+    "imagePublicId": "portfolio/projects/nrn9hlayxt7rgoug56ne",
+    "technologies": [
+      "javascript",
+      "html5",
+      "frontend",
+      "css3",
+      "frontend-mentor"
+    ],
+    "github": "https://github.com/sayaliakbar/intro-component-with-sign-up-form",
+    "demo": "https://lamentable-exchange.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:48:40.275Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f0543cf3203d570d7d49d6",
+    "title": "Stats Preview Card Component",
+    "description": "It demonstrates the use of modern frontend technologies to create a visually appealing and responsive card component.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743803401/portfolio/projects/cy5yaogb0cmcu175vvln.png",
+    "imagePublicId": "portfolio/projects/cy5yaogb0cmcu175vvln",
+    "technologies": [
+      "javascript",
+      "html5",
+      "frontend",
+      "css3",
+      "frontend-mentor"
+    ],
+    "github": "https://github.com/sayaliakbar/stats-preview-card-component",
+    "demo": "https://sore-airplane.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:50:52.042Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f054b6f3203d570d7d49db",
+    "title": "Ping Single Column Coming Soon Page",
+    "description": "It is a responsive single-column coming soon page for Ping, featuring a subscription form with client-side email validation, built using HTML, CSS, and JavaScript.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743803534/portfolio/projects/uwxhdqjqykfjskztbxrl.png",
+    "imagePublicId": "portfolio/projects/uwxhdqjqykfjskztbxrl",
+    "technologies": [
+      "javascript",
+      "html5",
+      "frontend",
+      "css3",
+      "frontend-mentor"
+    ],
+    "github": "https://github.com/sayaliakbar/ping-single-column-coming-soon-page",
+    "demo": "https://slow-dirt.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:52:54.060Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f05523f3203d570d7d49e0",
+    "title": "Profile Card Component",
+    "description": "This project showcases a simple yet elegant profile card design with basic HTML and TailwindCSS, designed to enhance front-end development skills.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743803626/portfolio/projects/he4e3xmxpnuszkcybxxz.jpg",
+    "imagePublicId": "portfolio/projects/he4e3xmxpnuszkcybxxz",
+    "technologies": [
+      "javascript",
+      "html5",
+      "frontend",
+      "css3",
+      "frontend-mentor"
+    ],
+    "github": "https://github.com/sayaliakbar/profile-card-component",
+    "demo": "https://rabid-balloon.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:54:43.396Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": "67f055a7f3203d570d7d49e5",
+    "title": "QR Code Component",
+    "description": "This challenge helped me improve my HTML and CSS skills by creating a visually appealing and responsive QR code component.",
+    "image": "https://res.cloudinary.com/dlhyx2xrx/image/upload/v1743803812/portfolio/projects/u2fvkmpw4nqgqh1rhgh0.png",
+    "imagePublicId": "portfolio/projects/u2fvkmpw4nqgqh1rhgh0",
+    "technologies": ["html5", "frontend", "css3", "frontend-mentor"],
+    "github": "https://github.com/sayaliakbar/qr-code-component",
+    "demo": "https://cute-position.surge.sh/",
+    "featured": false,
+    "createdAt": {
+      "$date": "2025-04-04T21:56:55.271Z"
+    },
+    "__v": 0
+  }
+]
