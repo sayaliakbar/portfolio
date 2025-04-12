@@ -24,15 +24,11 @@ const Login = () => {
     setError("");
 
     try {
-      console.log("Attempting login for:", username);
-
       // Call the backend login API
       const response = await api.post("/auth/login", {
         username,
         password,
       });
-
-      console.log("Login response:", response.status);
 
       // Store token in localStorage
       if (response.data.token) {
@@ -130,7 +126,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70"
+                className="flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline  focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70 cursor-pointer"
               >
                 {loading ? "Logging in..." : "Sign in"}
               </button>
