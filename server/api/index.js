@@ -86,6 +86,23 @@ app.use("/api/auth", authRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/resume", resumeRoutes);
 
+// Health check route
+app.get("/", (req, res) => {
+  const dbStatus =
+    mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+
+  res.status(200).json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    environment: process.env.NODE_ENV || "development",
+    database: {
+      status: dbStatus,
+      name: mongoose.connection.name || "Unknown",
+    },
+  });
+});
+
 // Serve static files from the uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
