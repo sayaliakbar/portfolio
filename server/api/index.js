@@ -26,6 +26,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 443;
 
+// Enable trust proxy to properly handle requests behind a reverse proxy
+// This is needed for express-rate-limit to work correctly with X-Forwarded-For headers
+app.set('trust proxy', 1);
+
 // Define a noop stream to use in production environment
 const noopStream = {
   write: () => {}, // Do nothing function
