@@ -26,16 +26,36 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 443;
 
-// Create a logs directory for morgan if it doesn't exist
-const logsDir = path.join(__dirname, "logs");
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+// Define a noop stream to use in production environment
+const noopStream = {
+  write: () => {}, // Do nothing function
+  end: () => {}, // Do nothing function
+};
 
-// Create a write stream for access logs
-const accessLogStream = fs.createWriteStream(path.join(logsDir, "access.log"), {
-  flags: "a",
-});
+// Configure access logging based on environment
+let accessLogStream = noopStream;
+
+// Only create log directories and files in development environment
+if (process.env.NODE_ENV !== "production") {
+  try {
+    // Create a logs directory for morgan if it doesn't exist
+    const logsDir = path.join(__dirname, "logs");
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+
+    // Create a write stream for access logs
+    accessLogStream = fs.createWriteStream(path.join(logsDir, "access.log"), {
+      flags: "a",
+    });
+  } catch (error) {
+    console.warn("Could not create log files:", error.message);
+    // Fallback to console logging in development
+    accessLogStream = {
+      write: (message) => console.log(message),
+    };
+  }
+}
 
 // Middleware
 app.use(cors(corsOptions));
@@ -44,8 +64,8 @@ app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
 // Configure Morgan logger based on environment
 if (process.env.NODE_ENV === "production") {
-  // Use common format for production and log to file
-  app.use(morgan("common", { stream: accessLogStream }));
+  // Use common format for production but log to console instead of file
+  app.use(morgan("common"));
 } else {
   // Use dev format for development console output
   app.use(morgan("dev"));
