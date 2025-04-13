@@ -7,18 +7,18 @@ const fs = require("fs");
 const http = require("http");
 const https = require("https");
 const morgan = require("morgan");
-const { apiLimiter } = require("./middleware/rateLimiter");
-const corsOptions = require("./config/corsOptions");
-const { messageLogger } = require("./middleware/logger");
-const connectDB = require("./config/database");
-const setupAdminUser = require("./scripts/setupAdmin");
+const { apiLimiter } = require("../middleware/rateLimiter");
+const corsOptions = require("../config/corsOptions");
+const { messageLogger } = require("../middleware/logger");
+const connectDB = require("../config/database");
+const setupAdminUser = require("../scripts/setupAdmin");
 
 // Routes
-const projectRoutes = require("./routes/projects");
-const messageRoutes = require("./routes/messages");
-const authRoutes = require("./routes/auth");
-const uploadRoutes = require("./routes/uploads");
-const resumeRoutes = require("./routes/resume");
+const projectRoutes = require("../routes/projects");
+const messageRoutes = require("../routes/messages");
+const authRoutes = require("../routes/auth");
+const uploadRoutes = require("../routes/uploads");
+const resumeRoutes = require("../routes/resume");
 
 // Config
 dotenv.config();
