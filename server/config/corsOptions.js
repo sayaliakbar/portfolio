@@ -7,8 +7,8 @@ const allowedOrigins = [
   "http://127.0.0.1:5173",
 
   // Production domains - replace with your actual domain in production
-  "https://yourportfolio.com",
-  "https://www.yourportfolio.com",
+  "https://sayaliakbar.tech",
+  "https://www.sayaliakbar.tech",
 
   // Add additional domains as needed
 ];
