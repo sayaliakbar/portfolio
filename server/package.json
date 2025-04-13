@@ -4,10 +4,8 @@
   "description": "Portfolio website backend",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "backup": "node scripts/backupDatabase.js",
-    "restore": "node scripts/restoreDatabase.js",
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
     "generate-jwt-secret": "node scripts/generateJwtSecret.js",
     "setup-backups": "node scripts/setupBackupCron.js",
     "cleanup-images": "node scripts/cleanupOrphanedImages.js",
