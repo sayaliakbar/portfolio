@@ -1,17 +1,37 @@
 const fs = require("fs");
 const path = require("path");
 
-// Ensure logs directory exists
-const logsDir = path.join(__dirname, "../logs");
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+// Define a noop stream to use in production environment
+const noopStream = {
+  write: () => {}, // Do nothing function
+  end: () => {}, // Do nothing function
+};
 
-// Create a write stream for message logs
-const messageLogStream = fs.createWriteStream(
-  path.join(logsDir, "messages.log"),
-  { flags: "a" }
-);
+let messageLogStream = noopStream;
+
+// Only create log directories and files in development environment
+if (process.env.NODE_ENV !== "production") {
+  try {
+    // Ensure logs directory exists
+    const logsDir = path.join(__dirname, "../logs");
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+
+    // Create a write stream for message logs
+    messageLogStream = fs.createWriteStream(
+      path.join(logsDir, "messages.log"),
+      { flags: "a" }
+    );
+  } catch (error) {
+    console.warn("Could not create log files:", error.message);
+    // Fallback to console logging
+    messageLogStream = {
+      write: (message) => console.log(message),
+      end: () => {},
+    };
+  }
+}
 
 // Custom middleware for logging message-related operations
 const messageLogger = (req, res, next) => {
