@@ -9,19 +9,39 @@ const requireAuth = require("../middleware/auth");
 
 dotenv.config();
 
-// Ensure logs directory exists
-const logsDir = path.join(__dirname, "../logs");
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+// Define a noop stream to use in production environment
+const noopStream = {
+  write: () => {}, // Do nothing function
+  end: () => {}, // Do nothing function
+};
 
 // Function to log email service status
 const logEmailServiceStatus = (status, details = null) => {
   const timestamp = new Date().toISOString();
-  const logStream = fs.createWriteStream(
-    path.join(logsDir, "email-service.log"),
-    { flags: "a" }
-  );
+  let logStream = noopStream;
+
+  // Only try to create log files in development environment
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      // Ensure logs directory exists
+      const logsDir = path.join(__dirname, "../logs");
+      if (!fs.existsSync(logsDir)) {
+        fs.mkdirSync(logsDir, { recursive: true });
+      }
+
+      logStream = fs.createWriteStream(
+        path.join(logsDir, "email-service.log"),
+        { flags: "a" }
+      );
+    } catch (error) {
+      console.warn("Could not create log files:", error.message);
+      // Fallback to console logging in development
+      logStream = {
+        write: (message) => console.log(message),
+        end: () => {},
+      };
+    }
+  }
 
   let logMessage = `[${timestamp}] EMAIL SERVICE STATUS: ${status}\n`;
   if (details) {
