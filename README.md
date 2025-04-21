@@ -7,6 +7,8 @@
 
 A modern, responsive full-stack portfolio website built with the MERN stack (MongoDB, Express.js, React, and Node.js). This application showcases projects, skills, and provides administrative features for content management.
 
+![Image](https://github.com/user-attachments/assets/4b2a0e78-67c4-481d-abe9-75d6f44b4616)
+
 ## Features
 
 - **Responsive Design**: Optimized for all device sizes
